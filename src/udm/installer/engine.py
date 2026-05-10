@@ -16,13 +16,16 @@ from udm.platform import (
 
 def _get_install_cmd(tool: dict) -> str:
     """Return the install command for the current platform, or '' if none."""
+    cmd = ""
     if is_windows():
-        return tool.get("install_command_windows", "")
+        cmd = tool.get("install_command_windows", "")
+        if cmd.startswith("winget") and "--disable-interactivity" not in cmd:
+            cmd += " --disable-interactivity"
     elif is_linux():
-        return tool.get("install_command_linux", "")
+        cmd = tool.get("install_command_linux", "")
     elif is_mac():
-        return tool.get("install_command_mac", "")
-    return ""
+        cmd = tool.get("install_command_mac", "")
+    return cmd
 
 
 def detect_tool(tool: dict) -> bool:
@@ -69,8 +72,12 @@ def install_tool(tool: dict) -> bool:
         log(f"  {name} appears already installed (package manager says so).")
         return True
 
-    log(f"  stdout: {out.strip()[:300]}")
-    log(f"  stderr: {err.strip()[:300]}")
+    out_clean = "\n".join(line.strip() for line in out.splitlines() if line.strip())
+    err_clean = "\n".join(line.strip() for line in err.splitlines() if line.strip())
+    
+    log(f"  stdout: {out_clean[-1000:]}")
+    if err_clean:
+        log(f"  stderr: {err_clean[-1000:]}")
     return False
 
 
