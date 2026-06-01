@@ -1,16 +1,16 @@
 """DevInstaller premium dark theme — color palette and global QSS stylesheet."""
 
 # ─── Background hierarchy ────────────────────────────────────────────
-BG_WINDOW = "#0f1117"
-BG_SIDEBAR = "#161921"
-BG_HEADER = "#161921"
-BG_CARD = "#1a1e28"
-BG_INPUT = "#1e2230"
-BG_ROW = "#1a1e28"
-BG_ROW_HOVER = "#222738"
-BG_ROW_SELECTED = "#1c2444"
-BG_LOG = "#12151c"
-BG_STATUS = "#12151c"
+BG_WINDOW = "#000000"
+BG_SIDEBAR = "#050505"
+BG_HEADER = "#050505"
+BG_CARD = "#0a0a0a"
+BG_INPUT = "#111111"
+BG_ROW = "#0a0a0a"
+BG_ROW_HOVER = "#151515"
+BG_ROW_SELECTED = "#111511"
+BG_LOG = "#050505"
+BG_STATUS = "#050505"
 
 # ─── Foreground ──────────────────────────────────────────────────────
 FG = "#e4e6ef"
@@ -173,16 +173,17 @@ def build_stylesheet() -> str:
             width: 20px;
             height: 20px;
             border: 2px solid {BORDER_LIGHT};
-            border-radius: 6px;
+            border-radius: 12px;
             background-color: transparent;
         }}
         QCheckBox::indicator:checked {{
-            background-color: {ACCENT_PRIMARY};
-            border-color: {ACCENT_PRIMARY};
+            background-color: #4caf50;
+            border-color: #4caf50;
             image: none;
         }}
         QCheckBox::indicator:hover {{
-            border-color: {ACCENT_PRIMARY};
+            border-color: #81c784;
+            background-color: rgba(129, 199, 132, 0.1);
         }}
 
         QTextEdit {{

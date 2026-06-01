@@ -35,7 +35,7 @@ CATEGORY_ICONS = {
     "Cloud": "☁️",
     "Mobile": "📱",
     "Web Dev": "🌐",
-    "AI/ML": "🤖",
+    "AI/ML": "🧠",
     "Testing": "🧪",
     "Security": "🔒",
     "Monitoring": "📊",

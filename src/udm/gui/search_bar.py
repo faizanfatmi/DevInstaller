@@ -219,7 +219,7 @@ class SearchBar(QWidget):
 
         if self._ai_mode:
             self.search_input.setPlaceholderText(
-                "🤖  Describe your project… e.g. 'MERN stack banao'"
+                "🔍  Describe your project… e.g. 'MERN stack banao'"
             )
             self.search_input.clear()
         else:
@@ -312,7 +312,7 @@ class _AIToggleButton(QWidget):
         self.setCursor(Qt.CursorShape.PointingHandCursor)
         self.setFixedSize(100, 42)
 
-        self._label = QLabel("🤖 AI Stack", self)
+        self._label = QLabel("🔍 AI Stack", self)
         self._label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self._label.setGeometry(0, 0, 100, 42)
         self._apply_style()

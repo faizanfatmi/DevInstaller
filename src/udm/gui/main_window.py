@@ -172,12 +172,13 @@ class MainWindow(QMainWindow):
         names = ", ".join(keys[:6])
         if count > 6:
             names += f" +{count - 6} more"
-        self.log_panel.append_log(f"🤖  AI Stack detected {count} tools: {names}")
+        self.log_panel.append_log(f"🔍  AI Stack detected {count} tools: {names}")
         self.status_bar.set_status_text(f"AI Stack — {count} tools selected")
 
     def _on_ai_clear(self):
         """Handle clearing of AI Stack results."""
         self.tool_table.clear_selection()
+        self._apply_filter()
         self.status_bar.set_status_text("Ready")
 
     def _on_refresh(self):

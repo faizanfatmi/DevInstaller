@@ -368,7 +368,7 @@ class ToolTable(QWidget):
         for row in self._rows:
             should_check = row.key in key_set
             row.set_checked(should_check)
-            row.setVisible(True)  # ensure visibility
+            row.setVisible(should_check)  # filter the list
             if should_check and first_matched_row is None:
                 first_matched_row = row
 
