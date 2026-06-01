@@ -6,11 +6,6 @@ DevInstaller is a cross-platform desktop application that lets developers search
 
 DevInstaller simplifies the setup process for developers by providing a unified interface to install tools across different operating systems. It uses native package managers (`winget`, `apt`, `brew`) and automatically handles PATH configurations, ensuring your environment is ready to use without manual tweaking.
 
-## Screen shot
-
-<img width="1492" height="968" alt="Screenshot 2026-05-17 010815" src="https://github.com/user-attachments/assets/e9e81918-b061-413a-898a-fda6f4276c0d" />
-
-
 ## Features
 
 - **Cross-Platform:** Works on Windows, Linux, and macOS using native package managers.

@@ -356,6 +356,32 @@ class ToolTable(QWidget):
         for row in self._rows:
             row.set_checked(False)
 
+    def select_tools_by_keys(self, keys: list[str]):
+        """Select tools matching the given keys, uncheck everything else.
+
+        Also resets the category filter to 'All' so matched tools are
+        visible, and scrolls to the first matched row.
+        """
+        key_set = set(keys)
+        first_matched_row = None
+
+        for row in self._rows:
+            should_check = row.key in key_set
+            row.set_checked(should_check)
+            row.setVisible(True)  # ensure visibility
+            if should_check and first_matched_row is None:
+                first_matched_row = row
+
+        count = sum(1 for r in self._rows if r.is_checked())
+        self.selection_changed.emit(count)
+
+        # Scroll to first matched tool
+        if first_matched_row is not None:
+            from PySide6.QtCore import QTimer
+            QTimer.singleShot(100, lambda: self.scroll_area.ensureWidgetVisible(
+                first_matched_row, 0, 50
+            ))
+
     def rebuild(self, tools: list[dict]):
         for row in self._rows:
             self.list_layout.removeWidget(row)

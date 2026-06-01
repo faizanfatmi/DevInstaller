@@ -112,6 +112,7 @@ class MainWindow(QMainWindow):
 
         # Search bar
         self.search_bar = SearchBar(self._categories)
+        self.search_bar.set_tools(self._all_tools)
         right_layout.addWidget(self.search_bar)
 
         # Tool table
@@ -136,6 +137,8 @@ class MainWindow(QMainWindow):
     def _connect_signals(self):
         self.search_bar.filter_changed.connect(self._apply_filter)
         self.search_bar.refresh_requested.connect(self._on_refresh)
+        self.search_bar.ai_select_requested.connect(self._on_ai_select)
+        self.search_bar.ai_clear_requested.connect(self._on_ai_clear)
         self.sidebar.category_selected.connect(self._on_category_selected)
         self.tool_table.selection_changed.connect(self._on_selection_changed)
         self.action_bar.clear_clicked.connect(self._on_clear)
@@ -162,11 +165,27 @@ class MainWindow(QMainWindow):
     def _on_clear(self):
         self.tool_table.clear_selection()
 
+    def _on_ai_select(self, keys: list):
+        """Handle AI Stack parse results — select matching tools."""
+        self.tool_table.select_tools_by_keys(keys)
+        count = len(keys)
+        names = ", ".join(keys[:6])
+        if count > 6:
+            names += f" +{count - 6} more"
+        self.log_panel.append_log(f"🤖  AI Stack detected {count} tools: {names}")
+        self.status_bar.set_status_text(f"AI Stack — {count} tools selected")
+
+    def _on_ai_clear(self):
+        """Handle clearing of AI Stack results."""
+        self.tool_table.clear_selection()
+        self.status_bar.set_status_text("Ready")
+
     def _on_refresh(self):
         self._all_tools = load_tools()
         self._categories = get_categories(self._all_tools)
         self._tool_counts = self._compute_tool_counts()
         self.search_bar.set_categories(self._categories)
+        self.search_bar.set_tools(self._all_tools)
         self.tool_table.rebuild(self._all_tools)
         self._apply_filter()
         self.log_panel.append_log("↻  Tool list refreshed from tools.json")
