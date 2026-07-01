@@ -50,6 +50,7 @@ class MainWindow(QMainWindow):
         self.resize(WINDOW_WIDTH, WINDOW_HEIGHT)
         self.setMinimumSize(MIN_WIDTH, MIN_HEIGHT)
         self.setStyleSheet(build_stylesheet())
+        self._apply_window_icon()
 
         self._installing = False
         self._version_worker = None
@@ -78,6 +79,17 @@ class MainWindow(QMainWindow):
                 apply_backdrop(self)
             except Exception:
                 pass  # cosmetic only
+
+    def _apply_window_icon(self):
+        """Set the window icon from the bundled logo.png, if present."""
+        from PySide6.QtGui import QIcon
+
+        from udm.config import resource_path
+        from udm.constants import LOGO_FILENAME
+
+        logo = resource_path(LOGO_FILENAME)
+        if logo.exists():
+            self.setWindowIcon(QIcon(str(logo)))
 
     def _compute_tool_counts(self) -> dict[str, int]:
         """Compute tool count per category."""
