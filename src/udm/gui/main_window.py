@@ -52,6 +52,7 @@ class MainWindow(QMainWindow):
         self.setStyleSheet(build_stylesheet())
 
         self._installing = False
+        self._version_worker = None
         self._signals = WorkerSignals()
         self._signals.progress.connect(self._on_progress)
         self._signals.log_message.connect(self._on_log)
