@@ -20,6 +20,28 @@ DevInstaller simplifies the setup process for developers by providing a unified 
 
 *Note: On Windows, it is recommended to run elevated: `uv run python -m udm --elevate`*
 
+## Quick Install (Automated Setup)
+
+The cross-platform setup scripts detect your OS, download the latest release,
+verify it, and install it automatically.
+
+**Linux / macOS**
+
+```bash
+curl -fsSL https://gitlab.com/faizan-fatmi-group/devinstaller/-/raw/main/scripts/install.sh | bash
+```
+
+**Windows (PowerShell)**
+
+```powershell
+irm https://gitlab.com/faizan-fatmi-group/devinstaller/-/raw/main/scripts/install.ps1 | iex
+```
+
+The scripts are configurable via environment variables (release provider,
+version, install directory). By default they use this project's GitLab
+releases; set `DEVINSTALLER_PROVIDER=github` and `DEVINSTALLER_GITHUB_REPO=owner/repo`
+to pull from a GitHub mirror instead.
+
 ## Building Distributables
 
 ### Using Meson
