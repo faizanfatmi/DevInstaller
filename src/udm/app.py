@@ -23,11 +23,21 @@ def main():
                 "Relaunch with --elevate for full access."
             )
 
+    from PySide6.QtGui import QIcon
     from PySide6.QtWidgets import QApplication
 
+    from udm.config import resource_path
+    from udm.constants import LOGO_FILENAME
     from udm.gui import MainWindow
 
     app = QApplication(sys.argv)
+
+    logo = resource_path(LOGO_FILENAME)
+    if logo.exists():
+        app.setWindowIcon(QIcon(str(logo)))
+    else:
+        logger.warning(f"Logo not found at {logo}; using default icon.")
+
     window = MainWindow()
     window.show()
     sys.exit(app.exec())

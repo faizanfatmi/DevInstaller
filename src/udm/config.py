@@ -17,6 +17,15 @@ def _get_base_dir() -> Path:
 TOOLS_JSON_PATH = _get_base_dir() / "tools.json"
 
 
+def resource_path(name: str) -> Path:
+    """Return the absolute path to a bundled resource file.
+
+    Works both when running from source and when frozen by PyInstaller
+    (resources are unpacked under sys._MEIPASS).
+    """
+    return _get_base_dir() / name
+
+
 def load_tools() -> list[dict]:
     """Load and return the tools list from tools.json."""
     try:

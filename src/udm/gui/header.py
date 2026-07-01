@@ -1,8 +1,11 @@
 """Header bar — app branding with gradient accent line."""
 
 from PySide6.QtCore import Qt
-from PySide6.QtGui import QLinearGradient, QPainter, QColor
+from PySide6.QtGui import QLinearGradient, QPainter, QColor, QPixmap
 from PySide6.QtWidgets import QHBoxLayout, QLabel, QVBoxLayout, QWidget
+
+from udm.config import resource_path
+from udm.constants import LOGO_FILENAME
 
 from udm.gui.theme import (
     ACCENT_GRADIENT_END,
@@ -59,19 +62,34 @@ class HeaderBar(QWidget):
         brand_layout = QHBoxLayout()
         brand_layout.setSpacing(12)
 
-        # App icon (gradient box)
-        icon_label = QLabel("⚡")
+        # App icon — the brand logo (logo.png), with a graceful fallback.
+        icon_label = QLabel()
         icon_label.setFixedSize(36, 36)
         icon_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        icon_label.setStyleSheet(f"""
-            QLabel {{
-                background: qlineargradient(x1:0, y1:0, x2:1, y2:1,
-                    stop:0 {ACCENT_GRADIENT_START}, stop:1 {ACCENT_GRADIENT_END});
-                border-radius: 10px;
-                font-size: 18px;
-                color: white;
-            }}
-        """)
+        logo_path = resource_path(LOGO_FILENAME)
+        pixmap = QPixmap(str(logo_path)) if logo_path.exists() else QPixmap()
+        if not pixmap.isNull():
+            icon_label.setPixmap(
+                pixmap.scaled(
+                    36,
+                    36,
+                    Qt.AspectRatioMode.KeepAspectRatio,
+                    Qt.TransformationMode.SmoothTransformation,
+                )
+            )
+            icon_label.setStyleSheet("background: transparent; border-radius: 10px;")
+        else:
+            icon_label.setText("D")
+            icon_label.setStyleSheet(f"""
+                QLabel {{
+                    background: qlineargradient(x1:0, y1:0, x2:1, y2:1,
+                        stop:0 {ACCENT_GRADIENT_START}, stop:1 {ACCENT_GRADIENT_END});
+                    border-radius: 10px;
+                    font-size: 18px;
+                    font-weight: 800;
+                    color: white;
+                }}
+            """)
         brand_layout.addWidget(icon_label)
 
         # Title + subtitle
