@@ -13,6 +13,7 @@ polkit password dialog is displayed.
 import platform
 
 from udm.installer.callbacks import log
+from udm.installer.distro_packages import translate_apt_command
 from udm.installer.prerequisites import (
     ensure_apt_updated,
     ensure_dnf_ready,
@@ -50,9 +51,22 @@ def _linux_install_cmd(tool: dict) -> str:
         "suse": "install_command_suse",
     }.get(family)
 
+    # 1) An explicit per-distro command in tools.json always wins.
     if per_family_key and tool.get(per_family_key):
         return tool[per_family_key]
-    return tool.get("install_command_linux", "")
+
+    linux_cmd = tool.get("install_command_linux", "")
+
+    # 2) For Arch/Fedora, derive a native command from the apt command when
+    #    possible (non-apt commands like npm/pip/curl are cross-distro and are
+    #    returned unchanged by the translator).
+    if family in ("arch", "fedora"):
+        derived = translate_apt_command(linux_cmd, family)
+        if derived:
+            return derived
+
+    # 3) Fall back to the generic linux command.
+    return linux_cmd
 
 
 def _get_install_cmd(tool: dict) -> str:
