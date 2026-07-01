@@ -294,22 +294,23 @@ class MainWindow(QMainWindow):
         installed = sum(1 for v in results.values() if v == "installed")
         skipped = sum(1 for v in results.values() if v == "already_installed")
         failed = sum(1 for v in results.values() if v == "failed")
-
-        summary = (
-            f"Installation Complete\n\n"
-            f"   Newly installed:   {installed}\n"
-            f"   Already present:   {skipped}\n"
-            f"   Failed:            {failed}\n"
-        )
+        failed_names = [k for k, v in results.items() if v == "failed"]
 
         if failed:
             self.status_bar.set_status_text("Completed with errors")
-            failed_names = [k for k, v in results.items() if v == "failed"]
-            summary += f"\nFailed: {', '.join(failed_names)}"
-            QMessageBox.warning(self, "Completed with errors", summary)
         else:
             self.status_bar.set_status_text("All done — happy coding! 🎉")
-            QMessageBox.information(self, "Success ✓", summary)
+
+        from udm.gui.completion_dialog import CompletionDialog
+
+        dialog = CompletionDialog(
+            installed=installed,
+            skipped=skipped,
+            failed=failed,
+            failed_names=failed_names,
+            parent=self,
+        )
+        dialog.exec()
 
     def closeEvent(self, event):
         if self._installing:
