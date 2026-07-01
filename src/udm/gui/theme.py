@@ -68,7 +68,18 @@ SIDEBAR_ICON_ACTIVE = "#6c5ce7"
 
 
 def build_stylesheet() -> str:
-    """Return the global QSS stylesheet for the application."""
+    """Return the global QSS stylesheet for the application.
+
+    Delegates to the Windows 11 Fluent Design theme. Legacy colour constants in
+    this module are preserved for widgets that still import them directly.
+    """
+    from udm.gui.fluent import fluent_stylesheet
+
+    return fluent_stylesheet()
+
+
+def _legacy_stylesheet() -> str:
+    """The original premium dark stylesheet, kept for reference/fallback."""
     return f"""
         * {{
             font-family: "Segoe UI", "SF Pro Display", "Inter", "Helvetica Neue", sans-serif;

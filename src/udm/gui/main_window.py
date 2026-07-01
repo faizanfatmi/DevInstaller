@@ -66,6 +66,18 @@ class MainWindow(QMainWindow):
         self._setup_callbacks()
         self._center_on_screen()
 
+    def showEvent(self, event):
+        """Apply the Windows 11 Mica backdrop once the native window exists."""
+        super().showEvent(event)
+        if not getattr(self, "_backdrop_applied", False):
+            self._backdrop_applied = True
+            try:
+                from udm.gui.mica import apply_backdrop
+
+                apply_backdrop(self)
+            except Exception:
+                pass  # cosmetic only
+
     def _compute_tool_counts(self) -> dict[str, int]:
         """Compute tool count per category."""
         counts: dict[str, int] = {}
