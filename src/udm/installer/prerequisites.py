@@ -1,7 +1,17 @@
-"""Platform prerequisites — Homebrew and apt-get update."""
+"""Platform prerequisites — Homebrew and per-distro package-index refresh.
+
+The Linux refresh helpers run once per session and go through pkexec so the
+native polkit authentication dialog is shown for the privileged step.
+"""
 
 from udm.installer.callbacks import log
-from udm.platform import command_exists, is_linux, is_mac, run_command
+from udm.platform import (
+    command_exists,
+    is_linux,
+    is_mac,
+    run_command,
+    run_privileged_command,
+)
 
 
 def ensure_homebrew():
@@ -17,8 +27,30 @@ def ensure_homebrew():
 
 
 def ensure_apt_updated():
-    """Run `sudo apt-get update` once per session on Linux."""
+    """Run `apt-get update` once per session on Debian-family Linux."""
+    if not is_linux():
+        return
     if not hasattr(ensure_apt_updated, "_done"):
         log("  Updating apt package index…")
-        run_command("sudo apt-get update -y", timeout=120)
+        run_privileged_command("apt-get update -y", timeout=120)
         ensure_apt_updated._done = True
+
+
+def ensure_pacman_synced():
+    """Refresh the pacman database once per session on Arch-family Linux."""
+    if not is_linux():
+        return
+    if not hasattr(ensure_pacman_synced, "_done"):
+        log("  Synchronising pacman database…")
+        run_privileged_command("pacman -Sy --noconfirm", timeout=180)
+        ensure_pacman_synced._done = True
+
+
+def ensure_dnf_ready():
+    """Refresh dnf metadata once per session on Fedora-family Linux."""
+    if not is_linux():
+        return
+    if not hasattr(ensure_dnf_ready, "_done"):
+        log("  Refreshing dnf metadata…")
+        run_privileged_command("dnf makecache -y", timeout=180)
+        ensure_dnf_ready._done = True
