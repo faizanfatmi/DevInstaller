@@ -52,6 +52,7 @@ class MainWindow(QMainWindow):
         self.setStyleSheet(build_stylesheet())
 
         self._installing = False
+        self._version_worker = None
         self._signals = WorkerSignals()
         self._signals.progress.connect(self._on_progress)
         self._signals.log_message.connect(self._on_log)
@@ -190,6 +191,54 @@ class MainWindow(QMainWindow):
         self.tool_table.rebuild(self._all_tools)
         self._apply_filter()
         self.log_panel.append_log("↻  Tool list refreshed from tools.json")
+        self._maybe_refresh_versions()
+
+    def _maybe_refresh_versions(self):
+        """Kick off an optional, non-blocking Gemini version refresh.
+
+        Does nothing when the Gemini API key is not configured, so default
+        behaviour is unchanged for users without AI enabled.
+        """
+        from udm.ai import gemini_available
+
+        if not gemini_available():
+            return
+        if getattr(self, "_version_worker", None) is not None:
+            return  # a refresh is already running
+
+        from udm.ai.worker import VersionRefreshWorker
+
+        names = sorted({t.get("name", "") for t in self._all_tools if t.get("name")})
+        if not names:
+            return
+
+        self.log_panel.append_log("🤖  Checking latest language/compiler versions…")
+        worker = VersionRefreshWorker(names)
+        worker.finished_versions.connect(self._on_versions_ready)
+        worker.failed.connect(self._on_versions_failed)
+        worker.finished.connect(self._clear_version_worker)
+        self._version_worker = worker
+        worker.start()
+
+    @Slot(dict)
+    def _on_versions_ready(self, versions: dict):
+        if not versions:
+            return
+        for tool in self._all_tools:
+            latest = versions.get(tool.get("name", ""))
+            if latest:
+                tool["latest_version"] = latest
+        self.log_panel.append_log(
+            f"✓  Updated version info for {len(versions)} item(s)."
+        )
+        self.status_bar.set_status_text("Version metadata updated")
+
+    @Slot(str)
+    def _on_versions_failed(self, message: str):
+        self.log_panel.append_log(f"⚠  Version check skipped: {message}")
+
+    def _clear_version_worker(self):
+        self._version_worker = None
 
     def _on_install(self):
         tools = self.tool_table.selected_tools()
