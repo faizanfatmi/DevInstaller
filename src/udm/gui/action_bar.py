@@ -16,7 +16,7 @@ class ActionBar(QWidget):
     def __init__(self, parent=None):
         super().__init__(parent)
         self.setStyleSheet(f"background-color: {BG_WINDOW};")
-        self.setFixedHeight(72)
+        self.setFixedHeight(68)
 
         layout = QHBoxLayout(self)
         layout.setContentsMargins(24, 10, 24, 14)
@@ -26,20 +26,20 @@ class ActionBar(QWidget):
         self.count_label.setStyleSheet(f"""
             color: {FG_MUTED};
             font-size: 12px;
-            font-weight: 500;
+            font-weight: 400;
             background: transparent;
         """)
         layout.addWidget(self.count_label)
 
         layout.addStretch()
 
-        self.clear_btn = ActionButton("✕  Clear", "danger")
+        self.clear_btn = ActionButton("Clear", "danger")
         self.clear_btn.clicked.connect(self.clear_clicked.emit)
         layout.addWidget(self.clear_btn)
 
-        layout.addSpacing(12)
+        layout.addSpacing(10)
 
-        self.install_btn = ActionButton("⬇  Install Selected", "primary")
+        self.install_btn = ActionButton("Install Selected", "primary")
         self.install_btn.setEnabled(False)
         self.install_btn.clicked.connect(self.install_clicked.emit)
         layout.addWidget(self.install_btn)
@@ -47,8 +47,8 @@ class ActionBar(QWidget):
     def update_state(self, selected_count: int):
         self.install_btn.setEnabled(selected_count > 0)
         if selected_count > 0:
-            self.install_btn.setText(f"⬇  Install ({selected_count})")
+            self.install_btn.setText(f"Install ({selected_count})")
             self.count_label.setText(f"{selected_count} package{'s' if selected_count != 1 else ''} selected")
         else:
-            self.install_btn.setText("⬇  Install Selected")
+            self.install_btn.setText("Install Selected")
             self.count_label.setText("No packages selected")

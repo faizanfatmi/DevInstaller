@@ -1,4 +1,4 @@
-"""Sidebar — category navigation with counts."""
+"""Sidebar — category navigation with clean monochrome style."""
 
 from PySide6.QtCore import Qt, Signal
 from PySide6.QtWidgets import (
@@ -19,7 +19,7 @@ from udm.gui.theme import (
 )
 from udm.gui.widgets import SidebarButton
 
-# Category icon mapping
+# Category icon mapping — consistent Fluent emoji pack
 CATEGORY_ICONS = {
     "All": "📦",
     "Languages": "💻",
@@ -27,28 +27,34 @@ CATEGORY_ICONS = {
     "SDKs": "🧩",
     "Frameworks": "🏗️",
     "Databases": "🗄️",
-    "DevOps": "🚀",
+    "DevOps": "🔧",
+    "DevOps Tools": "🔧",
     "Package Managers": "📋",
-    "IDEs": "📝",
+    "IDEs": "🖥️",
+    "IDEs Editors": "🖥️",
     "Editors": "✏️",
     "Version Control": "🔀",
     "Cloud": "☁️",
+    "Cloud CLIs": "☁️",
     "Mobile": "📱",
+    "Mobile Development": "📱",
     "Web Dev": "🌐",
     "AI/ML": "🧠",
+    "AI / Data Science": "🧠",
     "Testing": "🧪",
     "Security": "🔒",
     "Monitoring": "📊",
     "Containers": "🐳",
-    "Build Tools": "🔧",
-    "Terminal": "💻",
+    "Build Tools": "🔨",
+    "Terminal": "⌨️",
     "Virtualization": "🖥️",
+    "SDKs Frameworks": "🧩",
     "Other": "📎",
 }
 
 
 class Sidebar(QWidget):
-    """Sidebar with category navigation."""
+    """Sidebar with category navigation — monochrome dark dashboard style."""
 
     category_selected = Signal(str)
 
@@ -72,7 +78,7 @@ class Sidebar(QWidget):
         section_title.setStyleSheet(f"""
             color: {FG_MUTED};
             font-size: 10px;
-            font-weight: 700;
+            font-weight: 600;
             letter-spacing: 1.5px;
             padding: 8px 20px;
             background: transparent;
@@ -127,7 +133,7 @@ class Sidebar(QWidget):
         layout.addWidget(stats_label)
 
     def _create_category_button(self, category: str, count: int) -> SidebarButton:
-        icon = CATEGORY_ICONS.get(category, "📎")
+        icon = CATEGORY_ICONS.get(category, "·")
         btn = SidebarButton(f"{category}  ({count})", icon)
         btn.clicked.connect(lambda checked, c=category: self._on_category_clicked(c))
         self._buttons.append(btn)

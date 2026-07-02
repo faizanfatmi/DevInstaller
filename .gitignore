@@ -33,3 +33,7 @@ builddir/
 
 # macOS
 *.dmg
+
+# Local Environment
+.env
+

@@ -1,5 +1,7 @@
 # DevInstaller
 
+![DevInstaller Screenshot](screenshot.png)
+
 DevInstaller is a cross-platform desktop application that lets developers search, select, and install programming languages, compilers, SDKs, and developer tools from a comprehensive catalog — all from a single, premium Qt-based GUI.
 
 ## About
@@ -9,8 +11,11 @@ DevInstaller simplifies the setup process for developers by providing a unified 
 ## Features
 
 - **Cross-Platform:** Works on Windows, Linux, and macOS using native package managers.
-- **Smart Install:** Automatically skips installed tools to save time.
-- **Configurable:** Easily customize the available tools by editing `tools.json`.
+- **Auto-Updater:** Automatically checks for new releases on GitHub at startup. Displays a premium update dialog with release notes, a smooth animated progress bar, and handles silent self-updating installation.
+- **AI-Powered Enrichment:** Integrates with the Gemini API to dynamically enrich metadata, compiler, interpreter, and language information.
+- **Premium Monochrome UI:** Features a modern dark theme layout, status badges, uniform item padding, and fluid animations.
+- **Smart Install:** Automatically detects and skips already installed tools to save time.
+- **Configurable:** Easily customize the available tools by editing `tools.json` and persist configuration keys via `.env` or `config.json`.
 
 ## Installation & Usage
 

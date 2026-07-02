@@ -1,4 +1,4 @@
-"""Collapsible system log panel with terminal styling."""
+"""Collapsible system log panel — clean dark terminal styling."""
 
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QColor, QTextCursor
@@ -26,7 +26,7 @@ from udm.gui.theme import (
 
 
 class LogPanel(QWidget):
-    """Collapsible terminal-style log output panel."""
+    """Collapsible terminal-style log output panel — monochrome dark."""
 
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -36,40 +36,36 @@ class LogPanel(QWidget):
         layout.setContentsMargins(24, 8, 24, 0)
         layout.setSpacing(0)
 
-        # Header bar
+        # Header bar — clean dark card style (no macOS traffic lights)
         header = QWidget()
         header.setStyleSheet(f"""
             background-color: {BG_CARD};
             border: 1px solid {BORDER};
             border-bottom: none;
-            border-top-left-radius: 10px;
-            border-top-right-radius: 10px;
+            border-top-left-radius: 8px;
+            border-top-right-radius: 8px;
         """)
-        header.setFixedHeight(38)
+        header.setFixedHeight(36)
         header_layout = QHBoxLayout(header)
-        header_layout.setContentsMargins(16, 0, 8, 0)
+        header_layout.setContentsMargins(14, 0, 8, 0)
 
-        # Terminal dots decoration
-        dots_layout = QHBoxLayout()
-        dots_layout.setSpacing(6)
-        for color in ["#ff5f57", "#ffbd2e", "#28c840"]:
-            dot = QLabel()
-            dot.setFixedSize(10, 10)
-            dot.setStyleSheet(f"""
-                background-color: {color};
-                border-radius: 5px;
-            """)
-            dots_layout.addWidget(dot)
-        header_layout.addLayout(dots_layout)
+        # Terminal indicator dot
+        dot = QLabel()
+        dot.setFixedSize(6, 6)
+        dot.setStyleSheet("""
+            background-color: #4ade80;
+            border-radius: 3px;
+        """)
+        header_layout.addWidget(dot)
 
-        header_layout.addSpacing(12)
+        header_layout.addSpacing(10)
 
-        title = QLabel("TERMINAL OUTPUT")
+        title = QLabel("TERMINAL")
         title.setStyleSheet(f"""
             color: {FG_MUTED};
             font-size: 11px;
-            font-weight: 700;
-            letter-spacing: 1px;
+            font-weight: 600;
+            letter-spacing: 1.2px;
             background: transparent;
         """)
         header_layout.addWidget(title)
@@ -83,7 +79,7 @@ class LogPanel(QWidget):
                 background: transparent;
                 color: {FG_MUTED};
                 border: none;
-                font-size: 12px;
+                font-size: 11px;
             }}
             QPushButton:hover {{ color: {FG_DIM}; }}
         """)
@@ -102,9 +98,9 @@ class LogPanel(QWidget):
                 background-color: {BG_LOG};
                 border: 1px solid {BORDER};
                 border-top: none;
-                border-bottom-left-radius: 10px;
-                border-bottom-right-radius: 10px;
-                font-family: "JetBrains Mono", "Cascadia Code", "Consolas", monospace;
+                border-bottom-left-radius: 8px;
+                border-bottom-right-radius: 8px;
+                font-family: "Cascadia Code", "JetBrains Mono", "Consolas", monospace;
                 font-size: 12px;
                 padding: 12px;
                 color: {FG_DIM};
@@ -128,7 +124,7 @@ class LogPanel(QWidget):
         elif "⚠" in msg or "warning" in ml or "skip" in ml:
             color = AMBER
         elif "═" in msg:
-            color = ACCENT_PRIMARY
+            color = "#ffffff"
 
         cursor = self.text_edit.textCursor()
         cursor.movePosition(QTextCursor.MoveOperation.End)

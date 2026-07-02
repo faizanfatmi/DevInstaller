@@ -1,13 +1,10 @@
-"""Status bar — gradient progress bar + system status label."""
+"""Status bar — monochrome progress bar + system status label."""
 
 from PySide6.QtCore import QEasingCurve, QPropertyAnimation, Qt
 from PySide6.QtWidgets import QHBoxLayout, QLabel, QProgressBar, QWidget
 
 from udm.constants import APP_VERSION
 from udm.gui.theme import (
-    ACCENT_GRADIENT_END,
-    ACCENT_GRADIENT_START,
-    ACCENT_PRIMARY,
     BG_STATUS,
     BORDER,
     FG_DIM,
@@ -18,26 +15,26 @@ from udm.gui.widgets import PillBadge
 
 
 class StatusBar(QWidget):
-    """Bottom status bar with gradient progress indicator."""
+    """Bottom status bar with clean monochrome progress indicator."""
 
     def __init__(self, parent=None):
         super().__init__(parent)
-        self.setFixedHeight(38)
+        self.setFixedHeight(36)
         self.setStyleSheet(f"""
             background-color: {BG_STATUS};
             border-top: 1px solid {BORDER};
         """)
 
         layout = QHBoxLayout(self)
-        layout.setContentsMargins(28, 0, 28, 0)
+        layout.setContentsMargins(24, 0, 24, 0)
         layout.setSpacing(12)
 
         self.status_label = QLabel("Ready")
         self.status_label.setStyleSheet(f"""
             color: {FG_MUTED};
             font-size: 11px;
-            font-weight: 600;
-            letter-spacing: 0.5px;
+            font-weight: 500;
+            letter-spacing: 0.3px;
             background: transparent;
         """)
         layout.addWidget(self.status_label)
@@ -46,18 +43,17 @@ class StatusBar(QWidget):
         self.progress_bar.setRange(0, 100)
         self.progress_bar.setValue(0)
         self.progress_bar.setTextVisible(False)
-        self.progress_bar.setFixedHeight(6)
+        self.progress_bar.setFixedHeight(3)
         self.progress_bar.setStyleSheet(f"""
             QProgressBar {{
                 background-color: {PROGRESS_BG};
                 border: none;
-                border-radius: 3px;
-                max-height: 6px;
+                border-radius: 1px;
+                max-height: 3px;
             }}
             QProgressBar::chunk {{
-                background: qlineargradient(x1:0, y1:0, x2:1, y2:0,
-                    stop:0 {ACCENT_GRADIENT_START}, stop:1 {ACCENT_GRADIENT_END});
-                border-radius: 3px;
+                background-color: #ffffff;
+                border-radius: 1px;
             }}
         """)
         layout.addWidget(self.progress_bar, stretch=1)

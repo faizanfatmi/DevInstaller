@@ -1,9 +1,10 @@
 """Main application window — assembles all GUI sections with sidebar layout."""
 
+import os
 import sys
 import threading
 
-from PySide6.QtCore import QObject, Qt, Signal, Slot
+from PySide6.QtCore import QObject, Qt, Signal, Slot, QTimer
 from PySide6.QtWidgets import (
     QHBoxLayout,
     QMainWindow,
@@ -67,6 +68,9 @@ class MainWindow(QMainWindow):
         self._connect_signals()
         self._setup_callbacks()
         self._center_on_screen()
+
+        # Non-blocking automatic check for updates 1 second after startup
+        QTimer.singleShot(1000, self._check_for_updates)
 
     def showEvent(self, event):
         """Apply the Windows 11 Mica backdrop once the native window exists."""
@@ -263,6 +267,40 @@ class MainWindow(QMainWindow):
 
     def _clear_version_worker(self):
         self._version_worker = None
+
+    def _check_for_updates(self):
+        """Kick off a non-blocking background check for app updates from GitHub."""
+        from udm.constants import APP_VERSION
+        from udm.updater import UpdateCheckWorker
+
+        github_repo = os.environ.get("DEVINSTALLER_GITHUB_REPO", "faizanfatmi/DevInstaller").strip()
+
+        self.log_panel.append_log("🔍  Checking for software updates...")
+        self._update_worker = UpdateCheckWorker(github_repo, APP_VERSION, self)
+        self._update_worker.update_available.connect(self._on_update_available)
+        self._update_worker.no_update_found.connect(
+            lambda: self.log_panel.append_log("✓  DevInstaller is up to date.")
+        )
+        self._update_worker.error.connect(
+            lambda err: self.log_panel.append_log(f"⚠  Update check failed: {err}")
+        )
+        self._update_worker.finished.connect(self._clear_update_worker)
+        self._update_worker.start()
+
+    @Slot(dict)
+    def _on_update_available(self, release_info: dict):
+        """Display the update dialog when a new version is detected."""
+        from udm.constants import APP_VERSION
+        from udm.gui.update_dialog import UpdateDialog
+
+        self.log_panel.append_log(f"✨  New update available: {release_info['latest_version']}!")
+
+        # Construct and execute the premium update dialog modal
+        dialog = UpdateDialog(release_info, APP_VERSION, self)
+        dialog.exec()
+
+    def _clear_update_worker(self):
+        self._update_worker = None
 
     def _on_install(self):
         tools = self.tool_table.selected_tools()

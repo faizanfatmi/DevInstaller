@@ -39,8 +39,43 @@ def config_dir() -> Path:
 
 
 def gemini_api_key() -> str:
-    """Return the Gemini API key from the environment (empty if unset)."""
-    return os.environ.get(ENV_GEMINI_API_KEY, "").strip()
+    """Return the Gemini API key.
+
+    Checks in order:
+    1. Environment variable DEVINSTALLER_GEMINI_API_KEY
+    2. A local .env file in the project root
+    3. config.json in the user config directory
+    """
+    # 1. Environment variable
+    val = os.environ.get(ENV_GEMINI_API_KEY, "").strip()
+    if val:
+        return val
+
+    # 2. Local .env file in project root
+    try:
+        env_file = _get_base_dir() / ".env"
+        if env_file.exists():
+            for line in env_file.read_text(encoding="utf-8").splitlines():
+                if line.startswith(f"{ENV_GEMINI_API_KEY}="):
+                    val = line.split("=", 1)[1].strip().strip('"').strip("'")
+                    if val:
+                        return val
+    except Exception:
+        pass
+
+    # 3. config.json in config_dir()
+    try:
+        conf_file = config_dir() / "config.json"
+        if conf_file.exists():
+            with open(conf_file, "r", encoding="utf-8") as f:
+                data = json.load(f)
+            val = data.get("gemini_api_key", "").strip()
+            if val:
+                return val
+    except Exception:
+        pass
+
+    return ""
 
 
 def gemini_model() -> str:

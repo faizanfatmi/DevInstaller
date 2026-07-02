@@ -1,59 +1,39 @@
-"""Windows 11 Fluent Design tokens and global stylesheet.
-
-This module centralises the Fluent design language for DevInstaller: an accent
-ramp, neutral surface layers suitable for a Mica/Acrylic backdrop, elevation
-borders, corner radii, a Segoe UI Variable typography stack, and a spacing
-scale. ``fluent_stylesheet()`` returns a complete QSS covering the common Qt
-controls with correct hover / pressed / disabled states.
-
-Colours are kept close to the Windows 11 system palette so the app blends with
-the OS. The surfaces use partial transparency where a Mica backdrop is active
-(see :mod:`udm.gui.mica`).
-"""
+"""Windows 11 Fluent Design tokens and global stylesheet — monochrome dark variant."""
 
 from __future__ import annotations
 
-# ── Accent ramp (Windows 11 default blue) ────────────────────────────
-ACCENT           = "#0067c0"
-ACCENT_HOVER     = "#1975c5"
-ACCENT_PRESSED   = "#3183cb"
-ACCENT_TEXT      = "#ffffff"
-ACCENT_SUBTLE    = "rgba(0, 103, 192, 0.10)"
+ACCENT           = "#ffffff"
+ACCENT_HOVER     = "#e0e0e0"
+ACCENT_PRESSED   = "#cccccc"
+ACCENT_TEXT      = "#0d0d0d"
+ACCENT_SUBTLE    = "rgba(255, 255, 255, 0.08)"
 
-# ── Neutral surfaces (dark theme, Mica-friendly) ───────────────────────
-WINDOW_BASE      = "#202020"   # solid fallback when Mica is unavailable
-LAYER            = "rgba(255, 255, 255, 0.05)"   # card / layer fill
-LAYER_ALT        = "rgba(255, 255, 255, 0.03)"
-SUBTLE_HOVER     = "rgba(255, 255, 255, 0.08)"
-SUBTLE_PRESSED   = "rgba(255, 255, 255, 0.04)"
-CONTROL_FILL     = "rgba(255, 255, 255, 0.06)"
-CONTROL_HOVER    = "rgba(255, 255, 255, 0.09)"
-CONTROL_INPUT    = "rgba(255, 255, 255, 0.05)"
+WINDOW_BASE      = "#0d0d0d"
+LAYER            = "rgba(255, 255, 255, 0.04)"
+LAYER_ALT        = "rgba(255, 255, 255, 0.02)"
+SUBTLE_HOVER     = "rgba(255, 255, 255, 0.06)"
+SUBTLE_PRESSED   = "rgba(255, 255, 255, 0.03)"
+CONTROL_FILL     = "rgba(255, 255, 255, 0.05)"
+CONTROL_HOVER    = "rgba(255, 255, 255, 0.08)"
+CONTROL_INPUT    = "rgba(255, 255, 255, 0.04)"
 
-# ── Text ────────────────────────────────────────────────
-TEXT_PRIMARY     = "#ffffff"
-TEXT_SECONDARY   = "rgba(255, 255, 255, 0.79)"
-TEXT_TERTIARY    = "rgba(255, 255, 255, 0.55)"
-TEXT_DISABLED    = "rgba(255, 255, 255, 0.36)"
+TEXT_PRIMARY     = "#e8e8e8"
+TEXT_SECONDARY   = "rgba(255, 255, 255, 0.65)"
+TEXT_TERTIARY    = "rgba(255, 255, 255, 0.40)"
+TEXT_DISABLED    = "rgba(255, 255, 255, 0.25)"
 
-# ── Strokes / borders ───────────────────────────────────────
-STROKE           = "rgba(255, 255, 255, 0.09)"
-STROKE_STRONG    = "rgba(255, 255, 255, 0.16)"
-CARD_STROKE      = "rgba(255, 255, 255, 0.07)"
+STROKE           = "rgba(255, 255, 255, 0.06)"
+STROKE_STRONG    = "rgba(255, 255, 255, 0.10)"
+CARD_STROKE      = "rgba(255, 255, 255, 0.05)"
 
-# ── Status ─────────────────────────────────────────────
-SUCCESS          = "#6ccb5f"
-WARNING          = "#fce100"
-DANGER           = "#ff99a4"
+SUCCESS          = "#4ade80"
+WARNING          = "#fbbf24"
+DANGER           = "#f87171"
 
-# ── Radii (Fluent uses 4/8 for controls and cards) ────────────────────
 RADIUS_CONTROL   = 4
 RADIUS_CARD      = 8
-
-# ── Spacing scale (px) ──────────────────────────────────────
 SPACE_XS, SPACE_S, SPACE_M, SPACE_L, SPACE_XL = 4, 8, 12, 16, 24
 
-# ── Typography ───────────────────────────────────────────
 FONT_STACK = (
     '"Segoe UI Variable Text", "Segoe UI Variable", "Segoe UI", '
     '"Inter", "SF Pro Text", -apple-system, sans-serif'
@@ -75,7 +55,6 @@ def fluent_stylesheet() -> str:
         QWidget {{
             color: {TEXT_PRIMARY};
         }}
-
         QLabel {{ background: transparent; }}
 
         /* ── Text inputs ── */
@@ -86,7 +65,7 @@ def fluent_stylesheet() -> str:
             border-bottom: 1px solid {STROKE_STRONG};
             border-radius: {RADIUS_CONTROL}px;
             padding: 9px 12px;
-            selection-background-color: {ACCENT};
+            selection-background-color: rgba(255, 255, 255, 0.20);
         }}
         QLineEdit:hover {{ background-color: {CONTROL_HOVER}; }}
         QLineEdit:focus {{
@@ -115,7 +94,7 @@ def fluent_stylesheet() -> str:
             margin-right: 12px;
         }}
         QComboBox QAbstractItemView {{
-            background-color: #2c2c2c;
+            background-color: #1a1a1a;
             color: {TEXT_PRIMARY};
             border: 1px solid {STROKE_STRONG};
             border-radius: {RADIUS_CARD}px;
@@ -137,18 +116,11 @@ def fluent_stylesheet() -> str:
         QPushButton:hover {{ background-color: {CONTROL_HOVER}; }}
         QPushButton:pressed {{ background-color: {SUBTLE_PRESSED}; color: {TEXT_SECONDARY}; }}
         QPushButton:disabled {{ color: {TEXT_DISABLED}; border-color: {STROKE}; }}
-        QPushButton:default {{
-            background-color: {ACCENT};
-            color: {ACCENT_TEXT};
-            border: 1px solid {ACCENT};
-        }}
-        QPushButton:default:hover {{ background-color: {ACCENT_HOVER}; }}
-        QPushButton:default:pressed {{ background-color: {ACCENT_PRESSED}; }}
 
         /* ── Scrollbars ── */
         QScrollBar:vertical {{
             background: transparent;
-            width: 12px;
+            width: 8px;
             margin: 2px;
         }}
         QScrollBar::handle:vertical {{
@@ -164,28 +136,30 @@ def fluent_stylesheet() -> str:
         QProgressBar {{
             background-color: {CONTROL_FILL};
             border: none;
-            border-radius: 3px;
+            border-radius: 2px;
             text-align: center;
             color: transparent;
-            max-height: 4px;
+            max-height: 3px;
         }}
         QProgressBar::chunk {{
-            background-color: {ACCENT};
-            border-radius: 3px;
+            background-color: #ffffff;
+            border-radius: 2px;
         }}
 
-        /* ── Checkbox ── */
+        /* ── Checkbox — circular, flat, green when checked ── */
         QCheckBox {{ spacing: 8px; }}
         QCheckBox::indicator {{
-            width: 18px; height: 18px;
-            border: 1px solid {STROKE_STRONG};
-            border-radius: {RADIUS_CONTROL}px;
-            background-color: {CONTROL_INPUT};
+            width: 20px; height: 20px;
+            border: 1.5px solid #666666;
+            border-radius: 10px;
+            background-color: transparent;
         }}
-        QCheckBox::indicator:hover {{ border-color: {TEXT_TERTIARY}; }}
+        QCheckBox::indicator:hover {{
+            border-color: #999999;
+        }}
         QCheckBox::indicator:checked {{
-            background-color: {ACCENT};
-            border-color: {ACCENT};
+            background-color: #22c55e;
+            border-color: #22c55e;
         }}
 
         /* ── Text edit / log ── */
@@ -199,13 +173,26 @@ def fluent_stylesheet() -> str:
             selection-background-color: {ACCENT_SUBTLE};
         }}
 
-        /* ── Message / dialog buttons ── */
-        QMessageBox {{ background-color: {WINDOW_BASE}; }}
+        /* ── Message / dialog ── */
+        QMessageBox {{ background-color: #151515; }}
         QMessageBox QLabel {{ color: {TEXT_PRIMARY}; }}
+        QMessageBox QPushButton {{
+            background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
+                stop:0 #4ade80, stop:0.5 #22c55e, stop:1 #16a34a);
+            color: #ffffff;
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 10px;
+            padding: 8px 24px;
+            font-weight: 700;
+        }}
+        QMessageBox QPushButton:hover {{
+            background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
+                stop:0 #86efac, stop:0.5 #4ade80, stop:1 #22c55e);
+        }}
 
         /* ── Tooltip ── */
         QToolTip {{
-            background-color: #2c2c2c;
+            background-color: #1a1a1a;
             color: {TEXT_PRIMARY};
             border: 1px solid {STROKE_STRONG};
             border-radius: {RADIUS_CONTROL}px;

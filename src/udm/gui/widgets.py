@@ -1,47 +1,84 @@
-"""Custom Qt widgets — PillBadge, GradientButton, CategoryChip."""
+"""Custom Qt widgets — PillBadge, ActionButton, SidebarButton."""
 
-from PySide6.QtCore import Property, QEasingCurve, QPropertyAnimation, Qt
-from PySide6.QtGui import QColor, QLinearGradient, QPainter, QPainterPath
+from PySide6.QtCore import Qt
+from PySide6.QtGui import QColor
 from PySide6.QtWidgets import QLabel, QPushButton, QGraphicsDropShadowEffect
 
 from udm.gui.theme import (
-    ACCENT_GRADIENT_END,
-    ACCENT_GRADIENT_START,
-    ACCENT_GLOW,
-    ACCENT_PRIMARY,
-    AMBER,
-    BADGE_ACCENT_BG,
-    BADGE_ACCENT_FG,
-    BADGE_AMBER_BG,
-    BADGE_AMBER_FG,
-    BADGE_BG,
-    BADGE_GREEN_BG,
-    BADGE_GREEN_FG,
-    BG_INPUT,
-    BORDER,
-    BORDER_LIGHT,
-    FG,
-    FG_DIM,
-    FG_MUTED,
-    GREEN,
-    GREEN_DARK,
-    GREEN_DIM,
-    RED,
-    RED_DIM,
-    SIDEBAR_ITEM_ACTIVE,
-    SIDEBAR_ITEM_HOVER,
+    ACCENT_GRADIENT_END, ACCENT_GRADIENT_START, ACCENT_GLOW, ACCENT_PRIMARY,
+    AMBER, BADGE_ACCENT_BG, BADGE_ACCENT_FG, BADGE_AMBER_BG, BADGE_AMBER_FG,
+    BADGE_BG, BADGE_GREEN_BG, BADGE_GREEN_FG, BG_INPUT, BORDER, BORDER_LIGHT,
+    FG, FG_DIM, FG_MUTED, GREEN, GREEN_DARK, GREEN_DIM, RED, RED_DIM,
+    SIDEBAR_ITEM_ACTIVE, SIDEBAR_ITEM_HOVER,
 )
+
+# ── Green glossy button CSS ──────────────────────────────────────────
+_GREEN_BTN = """
+    QPushButton {
+        background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
+            stop:0 #4ade80, stop:0.5 #22c55e, stop:1 #16a34a);
+        color: #ffffff;
+        border: 1px solid rgba(255, 255, 255, 0.15);
+        border-radius: 10px;
+        padding: 11px 24px;
+        font-size: 13px;
+        font-weight: 700;
+        letter-spacing: 0.3px;
+    }
+    QPushButton:hover {
+        background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
+            stop:0 #86efac, stop:0.5 #4ade80, stop:1 #22c55e);
+        border: 1px solid rgba(255, 255, 255, 0.25);
+    }
+    QPushButton:pressed {
+        background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
+            stop:0 #22c55e, stop:0.5 #16a34a, stop:1 #15803d);
+    }
+    QPushButton:disabled {
+        background: #1a1a1a;
+        color: #555555;
+        border: 1px solid #1f1f1f;
+    }
+"""
+
+# ── Red glossy button CSS (same design, red palette) ────────────────
+_RED_BTN = """
+    QPushButton {
+        background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
+            stop:0 #f87171, stop:0.5 #ef4444, stop:1 #b91c1c);
+        color: #ffffff;
+        border: 1px solid rgba(255, 255, 255, 0.15);
+        border-radius: 10px;
+        padding: 11px 24px;
+        font-size: 13px;
+        font-weight: 700;
+        letter-spacing: 0.3px;
+    }
+    QPushButton:hover {
+        background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
+            stop:0 #fca5a5, stop:0.5 #f87171, stop:1 #ef4444);
+        border: 1px solid rgba(255, 255, 255, 0.25);
+    }
+    QPushButton:pressed {
+        background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
+            stop:0 #ef4444, stop:0.5 #b91c1c, stop:1 #991b1b);
+    }
+    QPushButton:disabled {
+        background: #1a1a1a;
+        color: #555555;
+        border: 1px solid #1f1f1f;
+    }
+"""
 
 
 class PillBadge(QLabel):
     """Rounded pill-style badge label."""
-
     VARIANTS = {
-        "default": (BADGE_BG, FG_DIM),
+        "default": ("transparent", FG_DIM),
         "green": (BADGE_GREEN_BG, BADGE_GREEN_FG),
         "amber": (BADGE_AMBER_BG, BADGE_AMBER_FG),
         "red": (RED_DIM, RED),
-        "accent": (BADGE_ACCENT_BG, BADGE_ACCENT_FG),
+        "accent": ("transparent", BADGE_ACCENT_FG),
     }
 
     def __init__(self, text: str, variant: str = "default", parent=None):
@@ -49,105 +86,39 @@ class PillBadge(QLabel):
         bg, fg = self.VARIANTS.get(variant, self.VARIANTS["default"])
         self.setStyleSheet(f"""
             QLabel {{
-                background-color: {bg};
-                color: {fg};
-                border-radius: 6px;
-                padding: 4px 12px;
-                font-size: 11px;
-                font-weight: 600;
-                letter-spacing: 0.5px;
+                background-color: {bg}; color: {fg};
+                border-radius: 4px; padding: 4px 10px;
+                font-size: 11px; font-weight: 600;
             }}
         """)
         self.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
 
 class ActionButton(QPushButton):
-    """Styled action button with hover animation and optional gradient."""
+    """Glossy action button — green for primary/secondary, red for danger."""
 
     def __init__(self, text: str, variant: str = "primary", parent=None):
         super().__init__(text, parent)
         self.setCursor(Qt.CursorShape.PointingHandCursor)
         self._variant = variant
-        self._apply_style(hovered=False)
-
-    def _apply_style(self, hovered=False):
-        if self._variant == "primary":
-            if hovered:
-                bg = ACCENT_PRIMARY
-                fg = "#ffffff"
-                border = ACCENT_PRIMARY
-            else:
-                bg = ACCENT_PRIMARY
-                fg = "#ffffff"
-                border = ACCENT_PRIMARY
-            self.setStyleSheet(f"""
-                QPushButton {{
-                    background: qlineargradient(x1:0, y1:0, x2:1, y2:0,
-                        stop:0 {ACCENT_GRADIENT_START}, stop:1 {ACCENT_GRADIENT_END});
-                    color: {fg};
-                    border: none;
-                    border-radius: 10px;
-                    padding: 12px 28px;
-                    font-size: 13px;
-                    font-weight: 700;
-                    letter-spacing: 0.8px;
-                }}
-                QPushButton:hover {{
-                    background: qlineargradient(x1:0, y1:0, x2:1, y2:0,
-                        stop:0 #7c6cf7, stop:1 #10c4e8);
-                }}
-                QPushButton:disabled {{
-                    background-color: {BG_INPUT};
-                    color: {FG_MUTED};
-                    border: 1px solid {BORDER};
-                }}
-            """)
-            return
-
-        if self._variant == "danger":
-            if hovered:
-                bg = RED
-                fg = "#ffffff"
-                border = RED
-            else:
-                bg = "transparent"
-                fg = RED
-                border = f"rgba(255, 82, 82, 0.4)"
-        else:  # secondary
-            bg = BG_INPUT if not hovered else "#272c3e"
-            fg = FG
-            border = BORDER
-
-        self.setStyleSheet(f"""
-            QPushButton {{
-                background-color: {bg};
-                color: {fg};
-                border: 1.5px solid {border};
-                border-radius: 10px;
-                padding: 11px 24px;
-                font-size: 12px;
-                font-weight: 700;
-                letter-spacing: 0.8px;
-            }}
-            QPushButton:disabled {{
-                background-color: {BG_INPUT};
-                color: {FG_MUTED};
-                border-color: {BORDER};
-            }}
-        """)
-
-    def enterEvent(self, event):
-        if self.isEnabled():
-            self._apply_style(hovered=True)
-        super().enterEvent(event)
-
-    def leaveEvent(self, event):
-        self._apply_style(hovered=False)
-        super().leaveEvent(event)
+        if variant == "danger":
+            self.setStyleSheet(_RED_BTN)
+            glow = QGraphicsDropShadowEffect(self)
+            glow.setBlurRadius(18)
+            glow.setColor(QColor(239, 68, 68, 80))
+            glow.setOffset(0, 2)
+            self.setGraphicsEffect(glow)
+        else:
+            self.setStyleSheet(_GREEN_BTN)
+            glow = QGraphicsDropShadowEffect(self)
+            glow.setBlurRadius(18)
+            glow.setColor(QColor(34, 197, 94, 80))
+            glow.setOffset(0, 2)
+            self.setGraphicsEffect(glow)
 
 
 class SidebarButton(QPushButton):
-    """Sidebar navigation button with icon and active state."""
+    """Sidebar navigation button — clean monochrome style."""
 
     def __init__(self, text: str, icon_char: str = "", parent=None):
         display = f"{icon_char}  {text}" if icon_char else text
@@ -164,31 +135,18 @@ class SidebarButton(QPushButton):
 
     def _apply_style(self):
         if self._active:
-            bg = SIDEBAR_ITEM_ACTIVE
-            fg = ACCENT_PRIMARY
-            border_left = f"3px solid {ACCENT_PRIMARY}"
-            font_weight = "700"
+            bg, fg, fw = SIDEBAR_ITEM_ACTIVE, "#ffffff", "600"
         else:
-            bg = "transparent"
-            fg = FG_DIM
-            border_left = "3px solid transparent"
-            font_weight = "500"
-
+            bg, fg, fw = "transparent", FG_DIM, "400"
         self.setStyleSheet(f"""
             QPushButton {{
-                background-color: {bg};
-                color: {fg};
-                border: none;
-                border-left: {border_left};
-                border-radius: 0px;
-                padding: 12px 20px;
-                font-size: 13px;
-                font-weight: {font_weight};
-                text-align: left;
+                background-color: {bg}; color: {fg};
+                border: none; border-radius: 6px;
+                padding: 10px 16px; margin: 1px 8px;
+                font-size: 13px; font-weight: {fw}; text-align: left;
             }}
             QPushButton:hover {{
-                background-color: {SIDEBAR_ITEM_HOVER};
-                color: {FG};
+                background-color: {SIDEBAR_ITEM_HOVER}; color: {FG};
             }}
         """)
 
@@ -196,15 +154,10 @@ class SidebarButton(QPushButton):
         if not self._active:
             self.setStyleSheet(f"""
                 QPushButton {{
-                    background-color: {SIDEBAR_ITEM_HOVER};
-                    color: {FG};
-                    border: none;
-                    border-left: 3px solid transparent;
-                    border-radius: 0px;
-                    padding: 12px 20px;
-                    font-size: 13px;
-                    font-weight: 500;
-                    text-align: left;
+                    background-color: {SIDEBAR_ITEM_HOVER}; color: {FG};
+                    border: none; border-radius: 6px;
+                    padding: 10px 16px; margin: 1px 8px;
+                    font-size: 13px; font-weight: 400; text-align: left;
                 }}
             """)
         super().enterEvent(event)
