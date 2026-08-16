@@ -180,6 +180,8 @@ def install_tool(tool: dict) -> bool:
         or "no upgrade" in combined
         or "is already the newest" in combined
         or "nothing to do" in combined
+        or "no available upgrade" in combined
+        or "package is not available" in combined
     ):
         log(f"  {name} appears already installed (package manager says so).")
         return True
@@ -187,7 +189,9 @@ def install_tool(tool: dict) -> bool:
     out_clean = "\n".join(line.strip() for line in out.splitlines() if line.strip())
     err_clean = "\n".join(line.strip() for line in err.splitlines() if line.strip())
 
-    log(f"  stdout: {out_clean[-1000:]}")
+    log(f"  ✗ Install failed (exit {rc})")
+    if out_clean:
+        log(f"  stdout: {out_clean[-1000:]}")
     if err_clean:
         log(f"  stderr: {err_clean[-1000:]}")
     return False
@@ -211,9 +215,8 @@ def setup_path(tool: dict) -> bool:
 
     ok = True
     for d in dirs:
-        resolved = resolve_env_path(d)
-        log(f"  PATH → {resolved}")
-        if not add_to_path(resolved):
-            log(f"  ⚠ Could not add {resolved} to PATH")
+        log(f"  PATH <- {d}")
+        if not add_to_path(d):
+            log(f"  ⚠ Could not add to PATH: {d}")
             ok = False
     return ok

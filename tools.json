@@ -394,7 +394,7 @@
     "description": "Modern JVM language by JetBrains",
     "category": "Languages",
     "detect_cmd": "kotlin -version",
-    "install_command_windows": "winget install --id JetBrains.Kotlin.Compiler -e --silent --accept-source-agreements --accept-package-agreements",
+    "install_command_windows": "winget install --id Kotlin.Kotlin -e --silent --accept-source-agreements --accept-package-agreements",
     "install_command_linux": "sudo snap install --classic kotlin",
     "install_command_mac": "brew install kotlin",
     "path_dirs_windows": ["C:\\Program Files\\JetBrains\\Kotlin\\bin"],
@@ -564,7 +564,7 @@
     "install_command_linux": "sudo snap install julia --classic",
     "install_command_mac": "brew install julia",
     "path_dirs_windows": [
-      "C:\\Users\\%USERNAME%\\.julia\\juliaup\\bin",
+      "%USERPROFILE%\\.julia\\juliaup\\bin",
       "%LOCALAPPDATA%\\Programs\\Julia\\bin"
     ],
     "path_required": true
@@ -635,7 +635,7 @@
     "description": "Low-level systems language — C/C++ alternative",
     "category": "Languages",
     "detect_cmd": "zig version",
-    "install_command_windows": "winget install --id zig.zig -e --silent --accept-source-agreements --accept-package-agreements",
+    "install_command_windows": "winget install --id zig-lang.zig -e --silent --accept-source-agreements --accept-package-agreements",
     "install_command_linux": "sudo snap install zig --classic --beta",
     "install_command_mac": "brew install zig",
     "path_dirs_windows": ["C:\\Program Files\\zig"],
@@ -651,7 +651,7 @@
     "install_command_linux": "curl https://nim-lang.org/choosenim/init.sh -sSf | sh -s -- -y",
     "install_command_mac": "brew install nim",
     "path_dirs_windows": [
-      "C:\\Users\\%USERNAME%\\.nimble\\bin",
+      "%USERPROFILE%\\.nimble\\bin",
       "C:\\nim\\bin"
     ],
     "path_required": true
@@ -684,7 +684,7 @@
     "description": "Systems programming language with C-like syntax",
     "category": "Languages",
     "detect_cmd": "dmd --version",
-    "install_command_windows": "winget install --id DLangFoundation.DMD -e --silent --accept-source-agreements --accept-package-agreements",
+    "install_command_windows": "winget install --id DLang.Dmd -e --silent --accept-source-agreements --accept-package-agreements",
     "install_command_linux": "sudo apt-get install -y dmd",
     "install_command_mac": "brew install dmd",
     "path_dirs_windows": ["C:\\D\\dmd2\\windows\\bin"],
@@ -1208,7 +1208,7 @@
     "description": "GNU Debugger for C/C++/Fortran",
     "category": "Compilers",
     "detect_cmd": "gdb --version",
-    "install_command_windows": "winget install --id MSYS2.MSYS2 -e --silent --accept-source-agreements --accept-package-agreements",
+    "install_command_windows": "winget install --id MSYS2.MSYS2 -e --silent --accept-source-agreements --accept-package-agreements && C:\\msys64\\usr\\bin\\pacman.exe -S --noconfirm mingw-w64-x86_64-gdb",
     "install_command_linux": "sudo apt-get install -y gdb",
     "install_command_mac": "brew install gdb",
     "path_dirs_windows": ["C:\\msys64\\mingw64\\bin"],
@@ -1504,7 +1504,7 @@
     "name": "7-Zip",
     "description": "High compression ratio file archiver",
     "category": "DevOps & Tools",
-    "detect_cmd": "7z",
+    "detect_cmd": "7z i",
     "install_command_windows": "winget install --id 7zip.7zip -e --silent --accept-source-agreements --accept-package-agreements",
     "install_command_linux": "sudo apt-get install -y p7zip-full",
     "install_command_mac": "brew install p7zip",
