@@ -874,6 +874,18 @@
     "path_required": true
   },
   {
+    "key": "intellij",
+    "name": "IntelliJ IDEA Community",
+    "description": "Powerful Java/Kotlin IDE by JetBrains",
+    "category": "IDEs & Editors",
+    "detect_cmd": "idea --version",
+    "install_command_windows": "winget install --id JetBrains.IntelliJIDEA.Community -e --silent --accept-source-agreements --accept-package-agreements",
+    "install_command_linux": "sudo snap install intellij-idea-community --classic",
+    "install_command_mac": "brew install --cask intellij-idea-ce",
+    "path_dirs_windows": ["C:\\Program Files\\JetBrains\\IntelliJ IDEA Community Edition*\\bin"],
+    "path_required": true
+  },
+  {
     "key": "dotnet",
     "name": ".NET 8 SDK",
     "description": "Microsoft cross-platform development framework",
