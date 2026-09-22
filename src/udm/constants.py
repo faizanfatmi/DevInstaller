@@ -1,7 +1,7 @@
 """Application-wide constants."""
 
 APP_NAME = "DevInstaller"
-APP_VERSION = "1.0.0"
+APP_VERSION = "1.0.5"
 LOGO_FILENAME = "logo.png"
 WINDOW_TITLE = "DevInstaller"
 WINDOW_WIDTH = 1260

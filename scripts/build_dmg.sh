@@ -18,7 +18,9 @@ python3 -m PyInstaller \
     --onedir \
     --windowed \
     --name "Universal Dev Manager" \
+    --add-data "$ROOT/logo.png:." \
     --add-data "$ROOT/tools.json:." \
+    --add-data "$ROOT/src/udm/assets:src/udm/assets" \
     --hidden-import PySide6.QtCore \
     --hidden-import PySide6.QtGui \
     --hidden-import PySide6.QtWidgets \

@@ -1,4 +1,14 @@
-# DevInstaller
+<p align="center">
+  <img src="logo.png" width="96" height="96" alt="DevInstaller Logo" />
+</p>
+
+<h1 align="center">DevInstaller</h1>
+
+<p align="center">
+  <b>One-Click Developer Setup — Languages, Compilers, SDKs & Dev Tools</b>
+</p>
+
+---
 
 ![DevInstaller Screenshot](screenshot.png)
 

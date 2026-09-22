@@ -227,6 +227,12 @@ img, svg { display: block; }
   letter-spacing: -0.02em;
 }
 .nav__logo-icon { color: var(--accent); }
+.nav__logo-img {
+  width: 28px;
+  height: 28px;
+  border-radius: 7px;
+  display: block;
+}
 
 .nav__links {
   display: flex;

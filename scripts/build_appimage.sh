@@ -18,7 +18,9 @@ python3 -m PyInstaller \
     --noconfirm \
     --onedir \
     --name UniversalDevManager \
+    --add-data "$ROOT/logo.png:." \
     --add-data "$ROOT/tools.json:." \
+    --add-data "$ROOT/src/udm/assets:src/udm/assets" \
     --hidden-import PySide6.QtCore \
     --hidden-import PySide6.QtGui \
     --hidden-import PySide6.QtWidgets \
@@ -31,6 +33,7 @@ python3 -m PyInstaller \
 rm -rf "$APPDIR"
 mkdir -p "$APPDIR/usr/bin"
 mkdir -p "$APPDIR/usr/share/applications"
+mkdir -p "$APPDIR/usr/share/icons/hicolor/scalable/apps"
 mkdir -p "$APPDIR/usr/share/icons/hicolor/256x256/apps"
 
 cp -r "$BUILD/pyinstaller-dist/UniversalDevManager/"* "$APPDIR/usr/bin/"
@@ -49,17 +52,11 @@ EOF
 
 cp "$APPDIR/usr/share/applications/UniversalDevManager.desktop" "$APPDIR/UniversalDevManager.desktop"
 
-# Create a simple SVG icon
-cat >"$APPDIR/UniversalDevManager.svg" <<'EOF'
-<svg xmlns="http://www.w3.org/2000/svg" width="256" height="256">
-    <rect width="256" height="256" fill="#1a1d23" rx="32"/>
-    <text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" font-family="sans-serif" font-size="120" fill="#4ade80" font-weight="bold">U</text>
-</svg>
-EOF
-
-# Copy icon to hicolor directory
-mkdir -p "$APPDIR/usr/share/icons/hicolor/scalable/apps"
-cp "$APPDIR/UniversalDevManager.svg" "$APPDIR/usr/share/icons/hicolor/scalable/apps/"
+# Copy official application icons
+cp "$ROOT/logo.svg" "$APPDIR/UniversalDevManager.svg"
+cp "$ROOT/logo.svg" "$APPDIR/usr/share/icons/hicolor/scalable/apps/UniversalDevManager.svg"
+cp "$ROOT/logo.png" "$APPDIR/usr/share/icons/hicolor/256x256/apps/UniversalDevManager.png"
+cp "$ROOT/logo.png" "$APPDIR/.DirIcon"
 
 # AppRun
 cat >"$APPDIR/AppRun" <<'APPRUN'
