@@ -1,4 +1,4 @@
-"""Modern post-installation completion screen — monochrome dark theme.
+"""Modern post-installation completion screen — deep navy dark theme.
 
 Replaces the plain QMessageBox result popup with a themed summary dialog that
 clearly communicates the outcome (all-success vs. completed-with-errors),

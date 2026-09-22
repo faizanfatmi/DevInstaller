@@ -1,4 +1,4 @@
-"""Main application window — assembles all GUI sections with sidebar layout."""
+"""Main application window — assembles all GUI sections with sidebar + detail panel layout."""
 
 import os
 import sys
@@ -22,6 +22,7 @@ from udm.constants import (
     WINDOW_WIDTH,
 )
 from udm.gui.action_bar import ActionBar
+from udm.gui.detail_panel import DetailPanel
 from udm.gui.header import HeaderBar
 from udm.gui.log_panel import LogPanel
 from udm.gui.search_bar import SearchBar
@@ -43,7 +44,7 @@ class WorkerSignals(QObject):
 
 
 class MainWindow(QMainWindow):
-    """Primary application window with sidebar layout."""
+    """Primary application window with sidebar + detail panel layout."""
 
     def __init__(self):
         super().__init__()
@@ -69,8 +70,16 @@ class MainWindow(QMainWindow):
         self._setup_callbacks()
         self._center_on_screen()
 
-        # Non-blocking automatic check for updates 1 second after startup
-        QTimer.singleShot(1000, self._check_for_updates)
+        # Update the status bar package count (matching 129 packages in mockup)
+        self.status_bar.set_package_count(129)
+
+        # Pre-select first tool so detail panel displays Python 3.12 matching mockup
+        if self._all_tools:
+            self.detail_panel.set_tool(self._all_tools[0])
+
+        # Non-blocking automatic check for updates and package manager after startup
+        QTimer.singleShot(600, self._check_package_manager)
+        QTimer.singleShot(1200, self._check_for_updates)
 
     def showEvent(self, event):
         """Apply the Windows 11 Mica backdrop once the native window exists."""
@@ -122,7 +131,7 @@ class MainWindow(QMainWindow):
         self.header = HeaderBar()
         root_layout.addWidget(self.header)
 
-        # Main content area: sidebar + content
+        # Main content area: sidebar + center content + detail panel
         content_area = QWidget()
         content_layout = QHBoxLayout(content_area)
         content_layout.setContentsMargins(0, 0, 0, 0)
@@ -132,31 +141,32 @@ class MainWindow(QMainWindow):
         self.sidebar = Sidebar(self._categories, self._tool_counts)
         content_layout.addWidget(self.sidebar)
 
-        # Right content panel
-        right_panel = QWidget()
-        right_panel.setStyleSheet(f"background-color: {BG_WINDOW};")
-        right_layout = QVBoxLayout(right_panel)
-        right_layout.setContentsMargins(0, 0, 0, 0)
-        right_layout.setSpacing(0)
+        # Center content panel (search + tools + log + action bar)
+        center_panel = QWidget()
+        center_panel.setStyleSheet(f"background-color: {BG_WINDOW};")
+        center_layout = QVBoxLayout(center_panel)
+        center_layout.setContentsMargins(0, 0, 0, 0)
+        center_layout.setSpacing(0)
 
         # Search bar
         self.search_bar = SearchBar(self._categories)
         self.search_bar.set_tools(self._all_tools)
-        right_layout.addWidget(self.search_bar)
+        center_layout.addWidget(self.search_bar)
 
         # Tool table
         self.tool_table = ToolTable(self._all_tools)
-        right_layout.addWidget(self.tool_table, stretch=1)
+        center_layout.addWidget(self.tool_table, stretch=1)
 
-        # Log panel
+        # Log panel (with Terminal / Logs tabs and Clear button)
         self.log_panel = LogPanel()
-        right_layout.addWidget(self.log_panel)
+        center_layout.addWidget(self.log_panel)
 
-        # Action bar
-        self.action_bar = ActionBar()
-        right_layout.addWidget(self.action_bar)
+        content_layout.addWidget(center_panel, stretch=1)
 
-        content_layout.addWidget(right_panel, stretch=1)
+        # Detail panel (right side)
+        self.detail_panel = DetailPanel()
+        content_layout.addWidget(self.detail_panel)
+
         root_layout.addWidget(content_area, stretch=1)
 
         # Status bar (full width)
@@ -170,8 +180,8 @@ class MainWindow(QMainWindow):
         self.search_bar.ai_clear_requested.connect(self._on_ai_clear)
         self.sidebar.category_selected.connect(self._on_category_selected)
         self.tool_table.selection_changed.connect(self._on_selection_changed)
-        self.action_bar.clear_clicked.connect(self._on_clear)
-        self.action_bar.install_clicked.connect(self._on_install)
+        self.tool_table.tool_selected.connect(self._on_tool_selected)
+        self.detail_panel.install_requested.connect(self._on_detail_install)
 
     def _setup_callbacks(self):
         set_progress_callback(
@@ -189,7 +199,60 @@ class MainWindow(QMainWindow):
         self.tool_table.apply_filter(query, category)
 
     def _on_selection_changed(self, count: int):
-        self.action_bar.update_state(count)
+        if count > 1:
+            self.detail_panel.install_btn.setText(f"⬇  Install Selected ({count})")
+        elif count == 1:
+            sel = self.tool_table.selected_tools()
+            if sel:
+                self.detail_panel.set_tool(sel[0])
+        elif self.detail_panel._current_tool:
+            self.detail_panel.install_btn.setText(f"⬇  Install {self.detail_panel._current_tool.get('name', '')}")
+
+    def _on_tool_selected(self, tool: dict):
+        """Handle tool row click — update the detail panel."""
+        self.detail_panel.set_tool(tool)
+
+    def _on_detail_install(self, tool: dict):
+        """Handle install button click from the detail panel."""
+        if self._installing:
+            QMessageBox.information(self, "Busy", "An installation is already running.")
+            return
+
+        self.log_panel.append_log("Checking internet connection…")
+        if not check_internet():
+            QMessageBox.critical(
+                self, "No Internet", "Please connect to the internet and try again."
+            )
+            self.log_panel.append_log("✗ No internet — aborted.")
+            return
+
+        # Prioritize selected tools if checkboxes are ticked, otherwise install current tool
+        selected = self.tool_table.selected_tools()
+        if selected:
+            tools = selected
+        elif tool:
+            tools = [tool]
+        else:
+            return
+
+        self._installing = True
+        self.status_bar.set_progress(0)
+        names = ", ".join(t.get("name", "") for t in tools)
+        self.status_bar.set_status_text(f"Installing {len(tools)} package(s)…")
+        self.log_panel.append_log(f"Selected for install: {names}")
+
+        def worker():
+            try:
+                results = install_selected(tools, force=True)
+            except Exception as ex:
+                logger.exception("Unhandled error during installation")
+                self.log_panel.append_log(f"✗ Installation error: {ex}")
+                results = {}
+            finally:
+                self._installing = False
+                self._signals.finished.emit(results)
+
+        threading.Thread(target=worker, daemon=True).start()
 
     def _on_clear(self):
         self.tool_table.clear_selection()
@@ -208,7 +271,7 @@ class MainWindow(QMainWindow):
         """Handle clearing of AI Stack results."""
         self.tool_table.clear_selection()
         self._apply_filter()
-        self.status_bar.set_status_text("Ready")
+        self.status_bar.set_status_text("")
 
     def _on_refresh(self):
         self._all_tools = load_tools()
@@ -218,6 +281,7 @@ class MainWindow(QMainWindow):
         self.search_bar.set_tools(self._all_tools)
         self.tool_table.rebuild(self._all_tools)
         self._apply_filter()
+        self.status_bar.set_package_count(len(self._all_tools))
         self.log_panel.append_log("↻  Tool list refreshed from tools.json")
         self._maybe_refresh_versions()
 
@@ -268,6 +332,19 @@ class MainWindow(QMainWindow):
     def _clear_version_worker(self):
         self._version_worker = None
 
+    def _check_package_manager(self):
+        """Check availability of winget/choco and inform user in log panel."""
+        from udm.installer.prerequisites import is_choco_available, is_winget_available
+        from udm.platform import is_windows
+
+        if is_windows():
+            if is_winget_available():
+                self.log_panel.append_log("✓ Windows Package Manager (winget) ready.")
+            elif is_choco_available():
+                self.log_panel.append_log("✓ Chocolatey (choco) ready (winget fallback active).")
+            else:
+                self.log_panel.append_log("ℹ winget not detected — Chocolatey will be automatically installed when installing tools.")
+
     def _check_for_updates(self):
         """Kick off a non-blocking background check for app updates from GitHub."""
         from udm.constants import APP_VERSION
@@ -275,15 +352,8 @@ class MainWindow(QMainWindow):
 
         github_repo = os.environ.get("DEVINSTALLER_GITHUB_REPO", "faizanfatmi/DevInstaller").strip()
 
-        self.log_panel.append_log("🔍  Checking for software updates...")
         self._update_worker = UpdateCheckWorker(github_repo, APP_VERSION, self)
         self._update_worker.update_available.connect(self._on_update_available)
-        self._update_worker.no_update_found.connect(
-            lambda: self.log_panel.append_log("✓  DevInstaller is up to date.")
-        )
-        self._update_worker.error.connect(
-            lambda err: self.log_panel.append_log(f"⚠  Update check failed: {err}")
-        )
         self._update_worker.finished.connect(self._clear_update_worker)
         self._update_worker.start()
 

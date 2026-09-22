@@ -8,11 +8,14 @@ from udm.platform.detect import is_linux, is_windows
 
 
 def run_command(
-    cmd: str,
+    cmd: str | list[str],
     shell: bool = True,
     timeout: int = 900,
 ) -> tuple[int, str, str]:
     """Run a shell command and return (returncode, stdout, stderr)."""
+    if isinstance(cmd, list):
+        shell = False
+
     kwargs: dict = dict(
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE,

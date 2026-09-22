@@ -1,74 +1,74 @@
-"""DevInstaller premium dark theme — monochrome color palette and global QSS stylesheet.
+"""DevInstaller premium dark theme — deep navy color palette and global QSS stylesheet.
 
-Inspired by modern dark dashboards (Linear, Vercel, beast insights).
-Clean monochrome design with true-black backgrounds and white/gray text hierarchy.
+Inspired by modern dark dashboards (VS Code, GitHub Desktop, JetBrains Toolbox).
+Deep navy backgrounds with blue accent and vibrant category badges.
 """
 
 # ─── Background hierarchy ────────────────────────────────────────────
-BG_WINDOW = "#0d0d0d"
-BG_SIDEBAR = "#0f0f0f"
-BG_HEADER = "#0f0f0f"
-BG_CARD = "#151515"
-BG_INPUT = "#1a1a1a"
-BG_ROW = "#111111"
-BG_ROW_HOVER = "#1a1a1a"
-BG_ROW_SELECTED = "#1a1f1a"
-BG_LOG = "#0f0f0f"
-BG_STATUS = "#0a0a0a"
+BG_WINDOW = "#0c1222"
+BG_SIDEBAR = "#0a0f1e"
+BG_HEADER = "#0a0f1e"
+BG_CARD = "#111a2e"
+BG_INPUT = "#162035"
+BG_ROW = "#0f1729"
+BG_ROW_HOVER = "#162035"
+BG_ROW_SELECTED = "#1a2744"
+BG_LOG = "#0a0f1e"
+BG_STATUS = "#080d1a"
 
 # ─── Foreground ──────────────────────────────────────────────────────
-FG = "#e8e8e8"
-FG_DIM = "#999999"
-FG_MUTED = "#555555"
-FG_HEADER = "#ffffff"
+FG = "#e2e8f0"
+FG_DIM = "#94a3b8"
+FG_MUTED = "#475569"
+FG_HEADER = "#f1f5f9"
 
-# ─── Accent (clean monochrome with subtle blue for interactive) ──────
-ACCENT_PRIMARY = "#ffffff"
-ACCENT_SECONDARY = "#cccccc"
-ACCENT_GRADIENT_START = "#ffffff"
-ACCENT_GRADIENT_END = "#cccccc"
-ACCENT_GLOW = "rgba(255, 255, 255, 0.15)"
+# ─── Accent (blue primary) ──────────────────────────────────────────
+ACCENT_PRIMARY = "#3b82f6"
+ACCENT_SECONDARY = "#60a5fa"
+ACCENT_GRADIENT_START = "#3b82f6"
+ACCENT_GRADIENT_END = "#2563eb"
+ACCENT_GLOW = "rgba(59, 130, 246, 0.20)"
 
 # ─── Status colors ─────────────────────────────────────────────────
 GREEN = "#4ade80"
 GREEN_DIM = "#0d2e1a"
 GREEN_DARK = "#22c55e"
 RED = "#f87171"
-RED_DIM = "#2e0d0d"
+RED_DIM = "#2e0d1a"
 AMBER = "#fbbf24"
 CYAN = "#22d3ee"
 PURPLE = "#a78bfa"
 
 # ─── Borders ────────────────────────────────────────────────────────
-BORDER = "#1f1f1f"
-BORDER_LIGHT = "#2a2a2a"
-BORDER_ACCENT = "rgba(255, 255, 255, 0.12)"
+BORDER = "#1e2d4a"
+BORDER_LIGHT = "#2a3f5f"
+BORDER_ACCENT = "rgba(59, 130, 246, 0.25)"
 
 # ─── Badges ─────────────────────────────────────────────────────────
-BADGE_BG = "#1f1f1f"
+BADGE_BG = "#1e2d4a"
 BADGE_GREEN_BG = "#0d2e1a"
 BADGE_GREEN_FG = "#4ade80"
 BADGE_AMBER_BG = "#2e2a0d"
 BADGE_AMBER_FG = "#fbbf24"
-BADGE_ACCENT_BG = "rgba(255, 255, 255, 0.08)"
-BADGE_ACCENT_FG = "#cccccc"
+BADGE_ACCENT_BG = "rgba(59, 130, 246, 0.15)"
+BADGE_ACCENT_FG = "#60a5fa"
 
 # ─── Progress ───────────────────────────────────────────────────────
-PROGRESS_BG = "#1a1a1a"
-PROGRESS_FG = "#ffffff"
+PROGRESS_BG = "#1e2d4a"
+PROGRESS_FG = "#3b82f6"
 
 # ─── Scrollbar ──────────────────────────────────────────────────────
 SCROLLBAR_BG = "transparent"
-SCROLLBAR_FG = "#2a2a2a"
+SCROLLBAR_FG = "#1e2d4a"
 
 # ─── Column header ──────────────────────────────────────────────────
-COLUMN_HEADER_FG = "#555555"
+COLUMN_HEADER_FG = "#475569"
 
 # ─── Sidebar ────────────────────────────────────────────────────────
-SIDEBAR_ITEM_HOVER = "#1a1a1a"
-SIDEBAR_ITEM_ACTIVE = "rgba(255, 255, 255, 0.08)"
-SIDEBAR_ICON_COLOR = "#555555"
-SIDEBAR_ICON_ACTIVE = "#ffffff"
+SIDEBAR_ITEM_HOVER = "#111a2e"
+SIDEBAR_ITEM_ACTIVE = "#162035"
+SIDEBAR_ICON_COLOR = "#475569"
+SIDEBAR_ICON_ACTIVE = "#3b82f6"
 
 
 def build_stylesheet() -> str:
@@ -108,8 +108,8 @@ def _legacy_stylesheet() -> str:
             selection-background-color: {ACCENT_PRIMARY};
         }}
         QLineEdit:focus {{
-            border-color: {BORDER_LIGHT};
-            background-color: #1a1a1a;
+            border-color: {ACCENT_PRIMARY};
+            background-color: {BG_INPUT};
         }}
 
         QComboBox {{
@@ -186,17 +186,17 @@ def _legacy_stylesheet() -> str:
         QCheckBox::indicator {{
             width: 20px;
             height: 20px;
-            border: 1.5px solid #666666;
-            border-radius: 10px;
+            border: 1.5px solid #475569;
+            border-radius: 4px;
             background-color: transparent;
         }}
         QCheckBox::indicator:checked {{
-            background-color: #22c55e;
-            border-color: #22c55e;
+            background-color: #3b82f6;
+            border-color: #3b82f6;
             image: none;
         }}
         QCheckBox::indicator:hover {{
-            border-color: #999999;
+            border-color: #60a5fa;
         }}
 
         QTextEdit {{
@@ -206,7 +206,7 @@ def _legacy_stylesheet() -> str:
             font-family: "JetBrains Mono", "Cascadia Code", "Consolas", monospace;
             font-size: 12px;
             padding: 14px;
-            selection-background-color: rgba(255, 255, 255, 0.15);
+            selection-background-color: rgba(59, 130, 246, 0.25);
         }}
 
         QMessageBox {{

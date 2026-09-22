@@ -16,6 +16,8 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 
 from udm.installer.callbacks import log, notify
 from udm.installer.engine import detect_tool, install_tool, setup_path
+from udm.installer.prerequisites import ensure_windows_prerequisites
+from udm.platform import is_windows
 
 # Maximum number of tools to install in parallel.  Keep this moderate to avoid
 # package-manager lock contention (e.g. winget's per-machine lock on Windows,
@@ -34,6 +36,7 @@ def _install_one(
     total: int,
     progress_lock: threading.Lock,
     completed_counter: list[int],
+    force: bool = False,
 ) -> tuple[str, str]:
     """Run the full lifecycle (detect → install → PATH → verify) for one tool.
 
@@ -52,13 +55,16 @@ def _install_one(
     log(f"\n── {name} ({idx + 1}/{total}) ─────────────────")
 
     # ── Stage 1: detection ───────────────────────────────────────────
-    _progress("Checking if already installed…")
-    if detect_tool(tool):
+    _progress("Checking installation status…")
+    is_present = detect_tool(tool)
+    if is_present and not force:
         log(f"  ✓ {name} is already installed. Skipping.")
         with progress_lock:
             completed_counter[0] += 1
         _progress("Already installed  ✓")
         return key, "already_installed"
+    elif is_present and force:
+        log(f"  ℹ {name} detected on system; running installer/update…")
 
     # ── Stage 2: install ─────────────────────────────────────────────
     _progress("Downloading and installing…")
@@ -111,12 +117,31 @@ def _install_one(
         return key, "installed"
 
 
-def install_selected(tools: list[dict], on_complete=None) -> dict[str, str]:
-    """Install all tools with parallel execution and progress callbacks."""
+def install_selected(
+    tools: list[dict],
+    on_complete: callable = None,
+    force: bool = False,
+) -> dict[str, str]:
+    """Install a list of tools, running up to MAX_PARALLEL in parallel.
+
+    When *force* is True, already-detected tools will run their installer/update
+    command instead of being skipped.
+    """
+    if not tools:
+        return {}
+
+    if is_windows():
+        ensure_windows_prerequisites()
+
     results: dict[str, str] = {}
     total = len(tools)
-    if total == 0:
-        notify("Done", "Nothing to install", 100)
+
+    if total == 1:
+        progress_lock = threading.Lock()
+        completed_counter = [0]
+        key, status = _install_one(tools[0], 0, 1, progress_lock, completed_counter, force=force)
+        results[key] = status
+        notify("Done", "All tasks complete", 100)
         if on_complete:
             on_complete(results)
         return results
@@ -136,7 +161,7 @@ def install_selected(tools: list[dict], on_complete=None) -> dict[str, str]:
     with ThreadPoolExecutor(max_workers=workers) as executor:
         futures = {
             executor.submit(
-                _install_one, tool, idx, total, progress_lock, completed_counter
+                _install_one, tool, idx, total, progress_lock, completed_counter, force
             ): tool
             for idx, tool in enumerate(tools)
         }

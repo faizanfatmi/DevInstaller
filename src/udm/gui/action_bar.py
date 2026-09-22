@@ -1,31 +1,38 @@
-"""Bottom action bar — Clear Selection + Install Selected buttons."""
+"""Bottom action bar — slim separator with selection count.
+
+The primary install button has been moved to the detail panel. This bar now
+serves as a thin status row showing the current selection count.
+"""
 
 from PySide6.QtCore import Signal
 from PySide6.QtWidgets import QHBoxLayout, QLabel, QWidget
 
-from udm.gui.theme import BG_WINDOW, FG_MUTED
+from udm.gui.theme import BG_WINDOW, BORDER, FG_MUTED
 from udm.gui.widgets import ActionButton
 
 
 class ActionBar(QWidget):
-    """Bottom buttons bar with clear and install actions."""
+    """Slim bottom bar showing selection count and quick actions."""
 
     clear_clicked = Signal()
     install_clicked = Signal()
 
     def __init__(self, parent=None):
         super().__init__(parent)
-        self.setStyleSheet(f"background-color: {BG_WINDOW};")
-        self.setFixedHeight(68)
+        self.setStyleSheet(f"""
+            background-color: {BG_WINDOW};
+            border-top: 1px solid {BORDER};
+        """)
+        self.setFixedHeight(44)
 
         layout = QHBoxLayout(self)
-        layout.setContentsMargins(24, 10, 24, 14)
+        layout.setContentsMargins(24, 6, 24, 6)
 
         # Selection count label
         self.count_label = QLabel("No packages selected")
         self.count_label.setStyleSheet(f"""
             color: {FG_MUTED};
-            font-size: 12px;
+            font-size: 11px;
             font-weight: 400;
             background: transparent;
         """)
@@ -33,13 +40,33 @@ class ActionBar(QWidget):
 
         layout.addStretch()
 
-        self.clear_btn = ActionButton("Clear", "danger")
+        # Clear button (small, secondary)
+        self.clear_btn = ActionButton("Clear", "secondary")
+        self.clear_btn.setFixedHeight(28)
+        self.clear_btn.setStyleSheet(f"""
+            QPushButton {{
+                background: transparent;
+                color: {FG_MUTED};
+                border: 1px solid {BORDER};
+                border-radius: 6px;
+                padding: 4px 16px;
+                font-size: 11px;
+                font-weight: 500;
+            }}
+            QPushButton:hover {{
+                color: #e2e8f0;
+                background-color: rgba(255, 255, 255, 0.05);
+                border-color: #2a3f5f;
+            }}
+        """)
         self.clear_btn.clicked.connect(self.clear_clicked.emit)
         layout.addWidget(self.clear_btn)
 
-        layout.addSpacing(10)
+        layout.addSpacing(8)
 
+        # Install button (compact)
         self.install_btn = ActionButton("Install Selected", "primary")
+        self.install_btn.setFixedHeight(28)
         self.install_btn.setEnabled(False)
         self.install_btn.clicked.connect(self.install_clicked.emit)
         layout.addWidget(self.install_btn)

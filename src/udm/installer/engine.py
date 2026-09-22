@@ -19,7 +19,10 @@ from udm.installer.prerequisites import (
     ensure_dnf_ready,
     ensure_homebrew,
     ensure_pacman_synced,
+    ensure_windows_prerequisites,
+    is_winget_available,
 )
+from udm.installer.windows_packages import translate_winget_to_choco
 from udm.platform import (
     add_to_path,
     friendly_pkexec_message,
@@ -74,8 +77,9 @@ def _get_install_cmd(tool: dict) -> str:
     cmd = ""
     if is_windows():
         cmd = tool.get("install_command_windows", "")
-        if cmd.startswith("winget") and "--disable-interactivity" not in cmd:
-            cmd += " --disable-interactivity"
+        # If winget is not available on this Windows system, translate to Chocolatey
+        if cmd and "winget" in cmd and not is_winget_available():
+            cmd = translate_winget_to_choco(cmd, tool)
     elif is_linux():
         cmd = _linux_install_cmd(tool)
     elif is_mac():
@@ -152,6 +156,8 @@ def install_tool(tool: dict) -> bool:
 
     if is_mac():
         ensure_homebrew()
+    elif is_windows():
+        ensure_windows_prerequisites()
 
     if is_linux():
         _run_linux_prerequisites(cmd)
@@ -175,6 +181,10 @@ def install_tool(tool: dict) -> bool:
         log(f"  ✗ {friendly_pkexec_message(rc)}")
         return False
 
+    if rc in (-1978335189, 2316632107, 3010):
+        log(f"  ✓ {name} is already up to date on system.")
+        return True
+
     if (
         "already installed" in combined
         or "no upgrade" in combined
@@ -182,8 +192,11 @@ def install_tool(tool: dict) -> bool:
         or "nothing to do" in combined
         or "no available upgrade" in combined
         or "package is not available" in combined
+        or "no changes made" in combined
+        or "install was successful" in combined
+        or "installed to" in combined
     ):
-        log(f"  {name} appears already installed (package manager says so).")
+        log(f"  ✓ {name} appears already installed or successfully set up.")
         return True
 
     out_clean = "\n".join(line.strip() for line in out.splitlines() if line.strip())

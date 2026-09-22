@@ -1,4 +1,4 @@
-"""Search bar — floating search input with AI Stack toggle and tool count badge."""
+"""Search bar — floating search input with AI Stack toggle and Ctrl+K hint."""
 
 from PySide6.QtCore import Qt, Signal, QPropertyAnimation, QEasingCurve, QTimer
 from PySide6.QtWidgets import (
@@ -17,8 +17,8 @@ from udm.gui.widgets import ActionButton
 class StackChip(QLabel):
     def __init__(self, text, parent=None):
         super().__init__(text, parent)
-        self.setStyleSheet("QLabel{background:rgba(255,255,255,0.06);color:#ccc;"
-            "border:1px solid rgba(255,255,255,0.10);border-radius:4px;"
+        self.setStyleSheet("QLabel{background:rgba(59,130,246,0.10);color:#60a5fa;"
+            "border:1px solid rgba(59,130,246,0.20);border-radius:4px;"
             "padding:4px 10px;font-size:11px;font-weight:500;}")
         self.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
@@ -34,7 +34,7 @@ class ChipBar(QWidget):
         self._layout.setContentsMargins(24, 0, 24, 4)
         self._layout.setSpacing(6)
         self._stack_label = QLabel()
-        self._stack_label.setStyleSheet("color:#fff;font-size:11px;font-weight:600;"
+        self._stack_label.setStyleSheet("color:#60a5fa;font-size:11px;font-weight:600;"
             "letter-spacing:0.8px;background:transparent;")
         self._layout.addWidget(self._stack_label)
         self._chips_container = QWidget()
@@ -90,19 +90,42 @@ class SearchBar(QWidget):
         layout = QHBoxLayout(top_row)
         layout.setContentsMargins(24, 14, 24, 8)
         layout.setSpacing(10)
+
+        # AI Stack toggle button
         self.ai_toggle = _AIToggleButton()
         self.ai_toggle.clicked.connect(self._toggle_ai_mode)
         layout.addWidget(self.ai_toggle)
+
+        # Search input with Ctrl+K hint
+        search_container = QWidget()
+        search_container.setStyleSheet("background: transparent;")
+        search_inner = QHBoxLayout(search_container)
+        search_inner.setContentsMargins(0, 0, 0, 0)
+        search_inner.setSpacing(0)
+
         self.search_input = QLineEdit()
-        self.search_input.setPlaceholderText("Search packages...")
+        self.search_input.setPlaceholderText("🔍  Search packages, tools, or frameworks...")
         self.search_input.setClearButtonEnabled(True)
         self.search_input.textChanged.connect(self._on_text_changed)
         self.search_input.returnPressed.connect(self._on_enter_pressed)
         self._apply_input_style(ai_active=False)
-        layout.addWidget(self.search_input, stretch=1)
-        refresh_btn = ActionButton("Refresh", "secondary")
-        refresh_btn.clicked.connect(self.refresh_requested.emit)
-        layout.addWidget(refresh_btn)
+        search_inner.addWidget(self.search_input, stretch=1)
+
+        layout.addWidget(search_container, stretch=1)
+
+        # Ctrl+K shortcut hint
+        shortcut_hint = QLabel("Ctrl + K")
+        shortcut_hint.setStyleSheet("""
+            background-color: #162035;
+            color: #64748b;
+            border: 1px solid #1e2d4a;
+            border-radius: 6px;
+            padding: 4px 10px;
+            font-size: 11px;
+            font-weight: 600;
+        """)
+        layout.addWidget(shortcut_hint)
+
         outer_layout.addWidget(top_row)
         self.chip_bar = ChipBar()
         self.chip_bar.clear_requested.connect(self._on_chip_clear)
@@ -131,7 +154,7 @@ class SearchBar(QWidget):
             self.search_input.setPlaceholderText("Describe your project…")
             self.search_input.clear()
         else:
-            self.search_input.setPlaceholderText("Search packages...")
+            self.search_input.setPlaceholderText("🔍  Search packages, tools, or frameworks...")
             self.search_input.clear()
             self.chip_bar.clear_chips()
             self.ai_clear_requested.emit()
@@ -139,13 +162,13 @@ class SearchBar(QWidget):
 
     def _apply_input_style(self, ai_active):
         if ai_active:
-            bc, fbc, bg, fbg = "#ffffff", "#cccccc", "#1a1a1a", "#1f1f1f"
+            bc, fbc, bg, fbg = "#3b82f6", "#60a5fa", "#162035", "#111a2e"
         else:
-            bc, fbc, bg, fbg = "#1f1f1f", "#2a2a2a", BG_INPUT, "#1f1f1f"
+            bc, fbc, bg, fbg = "#1e2d4a", "#3b82f6", BG_INPUT, "#111a2e"
         self.search_input.setStyleSheet(
             f"QLineEdit{{background-color:{bg};color:{FG};border:1px solid {bc};"
-            f"border-radius:6px;padding:10px 16px;font-size:13px;"
-            f"selection-background-color:rgba(255,255,255,0.20);}}"
+            f"border-radius:8px;padding:10px 16px;font-size:13px;"
+            f"selection-background-color:rgba(59,130,246,0.25);}}"
             f"QLineEdit:focus{{border-color:{fbc};background-color:{fbg};}}")
 
     def _on_text_changed(self, text):
@@ -199,13 +222,15 @@ class _AIToggleButton(QWidget):
     def _apply_style(self):
         if self._active:
             self._label.setStyleSheet(
-                "QLabel{background-color:#ffffff;color:#0d0d0d;border:none;"
-                "border-radius:6px;font-size:12px;font-weight:700;}")
+                "background-color: #3b82f6; color: #ffffff; border: none; "
+                "border-radius: 8px; font-size: 12px; font-weight: 700;"
+            )
         else:
             self._label.setStyleSheet(
-                f"QLabel{{background-color:{BG_INPUT};color:{FG_DIM};"
-                "border:1px solid #1f1f1f;border-radius:6px;"
-                "font-size:12px;font-weight:500;}}")
+                f"background-color: #162035; color: {FG_DIM}; "
+                "border: 1px solid #1e2d4a; border-radius: 8px; "
+                "font-size: 12px; font-weight: 500;"
+            )
         self.setGraphicsEffect(None)
 
     def mousePressEvent(self, event):
@@ -215,9 +240,10 @@ class _AIToggleButton(QWidget):
     def enterEvent(self, event):
         if not self._active:
             self._label.setStyleSheet(
-                f"QLabel{{background-color:#222222;color:{FG};"
-                "border:1px solid #2a2a2a;border-radius:6px;"
-                "font-size:12px;font-weight:500;}}")
+                f"background-color: #1a2744; color: {FG}; "
+                "border: 1px solid #2a3f5f; border-radius: 8px; "
+                "font-size: 12px; font-weight: 500;"
+            )
         super().enterEvent(event)
 
     def leaveEvent(self, event):

@@ -1,36 +1,36 @@
-"""Windows 11 Fluent Design tokens and global stylesheet — monochrome dark variant."""
+"""Windows 11 Fluent Design tokens and global stylesheet — deep navy dark variant."""
 
 from __future__ import annotations
 
-ACCENT           = "#ffffff"
-ACCENT_HOVER     = "#e0e0e0"
-ACCENT_PRESSED   = "#cccccc"
-ACCENT_TEXT      = "#0d0d0d"
-ACCENT_SUBTLE    = "rgba(255, 255, 255, 0.08)"
+ACCENT           = "#3b82f6"
+ACCENT_HOVER     = "#60a5fa"
+ACCENT_PRESSED   = "#2563eb"
+ACCENT_TEXT      = "#ffffff"
+ACCENT_SUBTLE    = "rgba(59, 130, 246, 0.12)"
 
-WINDOW_BASE      = "#0d0d0d"
-LAYER            = "rgba(255, 255, 255, 0.04)"
+WINDOW_BASE      = "#0c1222"
+LAYER            = "rgba(255, 255, 255, 0.03)"
 LAYER_ALT        = "rgba(255, 255, 255, 0.02)"
-SUBTLE_HOVER     = "rgba(255, 255, 255, 0.06)"
+SUBTLE_HOVER     = "rgba(255, 255, 255, 0.05)"
 SUBTLE_PRESSED   = "rgba(255, 255, 255, 0.03)"
 CONTROL_FILL     = "rgba(255, 255, 255, 0.05)"
 CONTROL_HOVER    = "rgba(255, 255, 255, 0.08)"
-CONTROL_INPUT    = "rgba(255, 255, 255, 0.04)"
+CONTROL_INPUT    = "#162035"
 
-TEXT_PRIMARY     = "#e8e8e8"
-TEXT_SECONDARY   = "rgba(255, 255, 255, 0.65)"
-TEXT_TERTIARY    = "rgba(255, 255, 255, 0.40)"
-TEXT_DISABLED    = "rgba(255, 255, 255, 0.25)"
+TEXT_PRIMARY     = "#e2e8f0"
+TEXT_SECONDARY   = "rgba(148, 163, 184, 1.0)"
+TEXT_TERTIARY    = "rgba(71, 85, 105, 1.0)"
+TEXT_DISABLED    = "rgba(255, 255, 255, 0.20)"
 
-STROKE           = "rgba(255, 255, 255, 0.06)"
-STROKE_STRONG    = "rgba(255, 255, 255, 0.10)"
-CARD_STROKE      = "rgba(255, 255, 255, 0.05)"
+STROKE           = "rgba(30, 45, 74, 1.0)"
+STROKE_STRONG    = "rgba(42, 63, 95, 1.0)"
+CARD_STROKE      = "rgba(30, 45, 74, 0.80)"
 
 SUCCESS          = "#4ade80"
 WARNING          = "#fbbf24"
 DANGER           = "#f87171"
 
-RADIUS_CONTROL   = 4
+RADIUS_CONTROL   = 6
 RADIUS_CARD      = 8
 SPACE_XS, SPACE_S, SPACE_M, SPACE_L, SPACE_XL = 4, 8, 12, 16, 24
 
@@ -42,7 +42,7 @@ FONT_MONO = '"Cascadia Code", "Cascadia Mono", "JetBrains Mono", "Consolas", mon
 
 
 def fluent_stylesheet() -> str:
-    """Return the global Fluent QSS for the application."""
+    """Return the global Fluent QSS for the application — deep navy variant."""
     return f"""
         * {{
             font-family: {FONT_STACK};
@@ -62,10 +62,9 @@ def fluent_stylesheet() -> str:
             background-color: {CONTROL_INPUT};
             color: {TEXT_PRIMARY};
             border: 1px solid {STROKE};
-            border-bottom: 1px solid {STROKE_STRONG};
             border-radius: {RADIUS_CONTROL}px;
             padding: 9px 12px;
-            selection-background-color: rgba(255, 255, 255, 0.20);
+            selection-background-color: rgba(59, 130, 246, 0.30);
         }}
         QLineEdit:hover {{ background-color: {CONTROL_HOVER}; }}
         QLineEdit:focus {{
@@ -94,7 +93,7 @@ def fluent_stylesheet() -> str:
             margin-right: 12px;
         }}
         QComboBox QAbstractItemView {{
-            background-color: #1a1a1a;
+            background-color: #111a2e;
             color: {TEXT_PRIMARY};
             border: 1px solid {STROKE_STRONG};
             border-radius: {RADIUS_CARD}px;
@@ -142,24 +141,24 @@ def fluent_stylesheet() -> str:
             max-height: 3px;
         }}
         QProgressBar::chunk {{
-            background-color: #ffffff;
+            background-color: {ACCENT};
             border-radius: 2px;
         }}
 
-        /* ── Checkbox — circular, flat, green when checked ── */
+        /* ── Checkbox — rounded square, blue when checked ── */
         QCheckBox {{ spacing: 8px; }}
         QCheckBox::indicator {{
-            width: 20px; height: 20px;
-            border: 1.5px solid #666666;
-            border-radius: 10px;
+            width: 18px; height: 18px;
+            border: 1.5px solid #475569;
+            border-radius: 4px;
             background-color: transparent;
         }}
         QCheckBox::indicator:hover {{
-            border-color: #999999;
+            border-color: {ACCENT_HOVER};
         }}
         QCheckBox::indicator:checked {{
-            background-color: #22c55e;
-            border-color: #22c55e;
+            background-color: {ACCENT};
+            border-color: {ACCENT};
         }}
 
         /* ── Text edit / log ── */
@@ -174,25 +173,25 @@ def fluent_stylesheet() -> str:
         }}
 
         /* ── Message / dialog ── */
-        QMessageBox {{ background-color: #151515; }}
+        QMessageBox {{ background-color: #111a2e; }}
         QMessageBox QLabel {{ color: {TEXT_PRIMARY}; }}
         QMessageBox QPushButton {{
             background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
-                stop:0 #4ade80, stop:0.5 #22c55e, stop:1 #16a34a);
+                stop:0 #60a5fa, stop:0.5 #3b82f6, stop:1 #2563eb);
             color: #ffffff;
             border: 1px solid rgba(255, 255, 255, 0.15);
-            border-radius: 10px;
+            border-radius: 8px;
             padding: 8px 24px;
             font-weight: 700;
         }}
         QMessageBox QPushButton:hover {{
             background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
-                stop:0 #86efac, stop:0.5 #4ade80, stop:1 #22c55e);
+                stop:0 #93bbfd, stop:0.5 #60a5fa, stop:1 #3b82f6);
         }}
 
         /* ── Tooltip ── */
         QToolTip {{
-            background-color: #1a1a1a;
+            background-color: #111a2e;
             color: {TEXT_PRIMARY};
             border: 1px solid {STROKE_STRONG};
             border-radius: {RADIUS_CONTROL}px;

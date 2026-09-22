@@ -13,8 +13,12 @@
       "%LOCALAPPDATA%\\Programs\\Python\\Python312",
       "%LOCALAPPDATA%\\Programs\\Python\\Python312\\Scripts"
     ],
-    "path_dirs_linux": ["/usr/bin"],
-    "path_dirs_mac": ["/usr/local/bin"],
+    "path_dirs_linux": [
+      "/usr/bin"
+    ],
+    "path_dirs_mac": [
+      "/usr/local/bin"
+    ],
     "path_required": true
   },
   {
@@ -53,8 +57,12 @@
     "install_command_windows": "winget install --id BrechtSanders.WinLibs.POSIX.UCRT -e --silent --accept-source-agreements --accept-package-agreements",
     "install_command_linux": "sudo apt-get install -y gcc",
     "install_command_mac": "brew install gcc",
-    "path_dirs_windows": ["%LOCALAPPDATA%\\Microsoft\\WinGet\\Packages\\BrechtSanders.WinLibs.POSIX.UCRT*\\mingw64\\bin"],
-    "path_dirs_linux": ["/usr/bin"],
+    "path_dirs_windows": [
+      "%LOCALAPPDATA%\\Microsoft\\WinGet\\Packages\\BrechtSanders.WinLibs.POSIX.UCRT*\\mingw64\\bin"
+    ],
+    "path_dirs_linux": [
+      "/usr/bin"
+    ],
     "path_required": true
   },
   {
@@ -66,7 +74,9 @@
     "install_command_windows": "winget install --id BrechtSanders.WinLibs.POSIX.UCRT -e --silent --accept-source-agreements --accept-package-agreements",
     "install_command_linux": "sudo apt-get install -y g++",
     "install_command_mac": "brew install gcc",
-    "path_dirs_windows": ["%LOCALAPPDATA%\\Microsoft\\WinGet\\Packages\\BrechtSanders.WinLibs.POSIX.UCRT*\\mingw64\\bin"],
+    "path_dirs_windows": [
+      "%LOCALAPPDATA%\\Microsoft\\WinGet\\Packages\\BrechtSanders.WinLibs.POSIX.UCRT*\\mingw64\\bin"
+    ],
     "path_required": true
   },
   {
@@ -78,9 +88,15 @@
     "install_command_windows": "winget install --id LLVM.LLVM -e --silent --accept-source-agreements --accept-package-agreements",
     "install_command_linux": "sudo apt-get install -y clang",
     "install_command_mac": "brew install llvm",
-    "path_dirs_windows": ["C:\\Program Files\\LLVM\\bin"],
-    "path_dirs_linux": ["/usr/bin"],
-    "path_dirs_mac": ["/usr/local/opt/llvm/bin"],
+    "path_dirs_windows": [
+      "C:\\Program Files\\LLVM\\bin"
+    ],
+    "path_dirs_linux": [
+      "/usr/bin"
+    ],
+    "path_dirs_mac": [
+      "/usr/local/opt/llvm/bin"
+    ],
     "path_required": true
   },
   {
@@ -92,7 +108,9 @@
     "install_command_windows": "winget install --id BrechtSanders.WinLibs.POSIX.UCRT -e --silent --accept-source-agreements --accept-package-agreements",
     "install_command_linux": "sudo apt-get install -y build-essential",
     "install_command_mac": "brew install gcc",
-    "path_dirs_windows": ["%LOCALAPPDATA%\\Microsoft\\WinGet\\Packages\\BrechtSanders.WinLibs.POSIX.UCRT*\\mingw64\\bin"],
+    "path_dirs_windows": [
+      "%LOCALAPPDATA%\\Microsoft\\WinGet\\Packages\\BrechtSanders.WinLibs.POSIX.UCRT*\\mingw64\\bin"
+    ],
     "path_required": true
   },
   {
@@ -104,7 +122,10 @@
     "install_command_windows": "winget install --id MSYS2.MSYS2 -e --silent --accept-source-agreements --accept-package-agreements",
     "install_command_linux": "",
     "install_command_mac": "",
-    "path_dirs_windows": ["C:\\msys64\\usr\\bin", "C:\\msys64\\mingw64\\bin"],
+    "path_dirs_windows": [
+      "C:\\msys64\\usr\\bin",
+      "C:\\msys64\\mingw64\\bin"
+    ],
     "path_required": true
   },
   {
@@ -116,7 +137,9 @@
     "install_command_windows": "winget install --id GnuWin32.Make -e --silent --accept-source-agreements --accept-package-agreements",
     "install_command_linux": "sudo apt-get install -y build-essential",
     "install_command_mac": "xcode-select --install",
-    "path_dirs_windows": ["C:\\Program Files (x86)\\GnuWin32\\bin"],
+    "path_dirs_windows": [
+      "C:\\Program Files (x86)\\GnuWin32\\bin"
+    ],
     "path_required": true
   },
   {
@@ -128,7 +151,9 @@
     "install_command_windows": "winget install --id GnuWin32.Make -e --silent --accept-source-agreements --accept-package-agreements",
     "install_command_linux": "sudo apt-get install -y make",
     "install_command_mac": "brew install make",
-    "path_dirs_windows": ["C:\\Program Files (x86)\\GnuWin32\\bin"],
+    "path_dirs_windows": [
+      "C:\\Program Files (x86)\\GnuWin32\\bin"
+    ],
     "path_required": true
   },
   {
@@ -140,7 +165,9 @@
     "install_command_windows": "winget install --id Kitware.CMake -e --silent --accept-source-agreements --accept-package-agreements",
     "install_command_linux": "sudo apt-get install -y cmake",
     "install_command_mac": "brew install cmake",
-    "path_dirs_windows": ["C:\\Program Files\\CMake\\bin"],
+    "path_dirs_windows": [
+      "C:\\Program Files\\CMake\\bin"
+    ],
     "path_required": true
   },
   {
@@ -152,7 +179,9 @@
     "install_command_windows": "winget install --id Ninja-build.Ninja -e --silent --accept-source-agreements --accept-package-agreements",
     "install_command_linux": "sudo apt-get install -y ninja-build",
     "install_command_mac": "brew install ninja",
-    "path_dirs_windows": ["C:\\Program Files\\Ninja"],
+    "path_dirs_windows": [
+      "C:\\Program Files\\Ninja"
+    ],
     "path_required": true
   },
   {
@@ -175,7 +204,9 @@
     "install_command_windows": "winget install --id NASM.NASM -e --silent --accept-source-agreements --accept-package-agreements",
     "install_command_linux": "sudo apt-get install -y nasm",
     "install_command_mac": "brew install nasm",
-    "path_dirs_windows": ["C:\\Program Files\\NASM"],
+    "path_dirs_windows": [
+      "C:\\Program Files\\NASM"
+    ],
     "path_required": true
   },
   {
@@ -184,7 +215,7 @@
     "description": "Rewrite of NASM assembler with AT&T syntax",
     "category": "Compilers",
     "detect_cmd": "yasm --version",
-    "install_command_windows": "",
+    "install_command_windows": "winget install --id TortoiseSVN.TortoiseSVN -e --silent --accept-source-agreements",
     "install_command_linux": "sudo apt-get install -y yasm",
     "install_command_mac": "brew install yasm",
     "path_required": false
@@ -195,7 +226,7 @@
     "description": "Flat Assembler — fast x86/x64 assembler",
     "category": "Compilers",
     "detect_cmd": "fasm",
-    "install_command_windows": "",
+    "install_command_windows": "winget install -e --id FlatAssembler.FASM --silent --accept-source-agreements",
     "install_command_linux": "sudo apt-get install -y fasm",
     "install_command_mac": "",
     "path_required": false
@@ -209,7 +240,9 @@
     "install_command_windows": "winget install --id BrechtSanders.WinLibs.POSIX.UCRT -e --silent --accept-source-agreements --accept-package-agreements",
     "install_command_linux": "sudo apt-get install -y gfortran",
     "install_command_mac": "brew install gcc",
-    "path_dirs_windows": ["%LOCALAPPDATA%\\Microsoft\\WinGet\\Packages\\BrechtSanders.WinLibs.POSIX.UCRT*\\mingw64\\bin"],
+    "path_dirs_windows": [
+      "%LOCALAPPDATA%\\Microsoft\\WinGet\\Packages\\BrechtSanders.WinLibs.POSIX.UCRT*\\mingw64\\bin"
+    ],
     "path_required": true
   },
   {
@@ -221,8 +254,12 @@
     "install_command_windows": "winget install --id EclipseAdoptium.Temurin.21.JDK -e --silent --accept-source-agreements --accept-package-agreements",
     "install_command_linux": "sudo apt-get install -y openjdk-21-jdk",
     "install_command_mac": "brew install openjdk@21",
-    "path_dirs_windows": ["C:\\Program Files\\Eclipse Adoptium\\jdk-21.*\\bin"],
-    "path_dirs_linux": ["/usr/lib/jvm/java-21-openjdk-amd64/bin"],
+    "path_dirs_windows": [
+      "C:\\Program Files\\Eclipse Adoptium\\jdk-21.*\\bin"
+    ],
+    "path_dirs_linux": [
+      "/usr/lib/jvm/java-21-openjdk-amd64/bin"
+    ],
     "path_required": true
   },
   {
@@ -234,7 +271,9 @@
     "install_command_windows": "winget install --id EclipseAdoptium.Temurin.17.JDK -e --silent --accept-source-agreements --accept-package-agreements",
     "install_command_linux": "sudo apt-get install -y openjdk-17-jdk",
     "install_command_mac": "brew install openjdk@17",
-    "path_dirs_windows": ["C:\\Program Files\\Eclipse Adoptium\\jdk-17.*\\bin"],
+    "path_dirs_windows": [
+      "C:\\Program Files\\Eclipse Adoptium\\jdk-17.*\\bin"
+    ],
     "path_required": true
   },
   {
@@ -246,7 +285,9 @@
     "install_command_windows": "winget install --id Apache.Maven -e --silent --accept-source-agreements --accept-package-agreements",
     "install_command_linux": "sudo apt-get install -y maven",
     "install_command_mac": "brew install maven",
-    "path_dirs_windows": ["C:\\Program Files\\Apache\\Maven\\bin"],
+    "path_dirs_windows": [
+      "C:\\Program Files\\Apache\\Maven\\bin"
+    ],
     "path_required": true
   },
   {
@@ -258,7 +299,9 @@
     "install_command_windows": "winget install --id Gradle.Gradle -e --silent --accept-source-agreements --accept-package-agreements",
     "install_command_linux": "sudo apt-get install -y gradle",
     "install_command_mac": "brew install gradle",
-    "path_dirs_windows": ["C:\\Gradle\\bin"],
+    "path_dirs_windows": [
+      "C:\\Gradle\\bin"
+    ],
     "path_required": true
   },
   {
@@ -270,7 +313,9 @@
     "install_command_windows": "winget install --id OpenJS.NodeJS.LTS -e --silent --accept-source-agreements --accept-package-agreements",
     "install_command_linux": "sudo apt-get install -y nodejs npm",
     "install_command_mac": "brew install node",
-    "path_dirs_windows": ["C:\\Program Files\\nodejs"],
+    "path_dirs_windows": [
+      "C:\\Program Files\\nodejs"
+    ],
     "path_required": true
   },
   {
@@ -282,7 +327,10 @@
     "install_command_windows": "winget install --id OpenJS.NodeJS.LTS -e --silent --accept-source-agreements --accept-package-agreements",
     "install_command_linux": "sudo apt-get install -y npm",
     "install_command_mac": "brew install node",
-    "path_dirs_windows": ["C:\\Program Files\\nodejs", "%APPDATA%\\npm"],
+    "path_dirs_windows": [
+      "C:\\Program Files\\nodejs",
+      "%APPDATA%\\npm"
+    ],
     "path_required": true
   },
   {
@@ -294,7 +342,9 @@
     "install_command_windows": "npm install -g yarn",
     "install_command_linux": "npm install -g yarn",
     "install_command_mac": "brew install yarn",
-    "path_dirs_windows": ["%APPDATA%\\npm"],
+    "path_dirs_windows": [
+      "%APPDATA%\\npm"
+    ],
     "path_required": true
   },
   {
@@ -306,7 +356,10 @@
     "install_command_windows": "npm install -g pnpm",
     "install_command_linux": "npm install -g pnpm",
     "install_command_mac": "brew install pnpm",
-    "path_dirs_windows": ["%APPDATA%\\npm", "%LOCALAPPDATA%\\pnpm"],
+    "path_dirs_windows": [
+      "%APPDATA%\\npm",
+      "%LOCALAPPDATA%\\pnpm"
+    ],
     "path_required": true
   },
   {
@@ -318,7 +371,9 @@
     "install_command_windows": "npm install -g typescript",
     "install_command_linux": "npm install -g typescript",
     "install_command_mac": "npm install -g typescript",
-    "path_dirs_windows": ["%APPDATA%\\npm"],
+    "path_dirs_windows": [
+      "%APPDATA%\\npm"
+    ],
     "path_required": true
   },
   {
@@ -334,7 +389,9 @@
       "C:\\Program Files\\Go\\bin",
       "%USERPROFILE%\\go\\bin"
     ],
-    "path_dirs_linux": ["/usr/local/go/bin"],
+    "path_dirs_linux": [
+      "/usr/local/go/bin"
+    ],
     "path_required": true
   },
   {
@@ -346,9 +403,15 @@
     "install_command_windows": "winget install --id Rustlang.Rust.MSVC -e --silent --accept-source-agreements --accept-package-agreements",
     "install_command_linux": "curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y",
     "install_command_mac": "curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y",
-    "path_dirs_windows": ["%USERPROFILE%\\.cargo\\bin"],
-    "path_dirs_linux": ["$HOME/.cargo/bin"],
-    "path_dirs_mac": ["$HOME/.cargo/bin"],
+    "path_dirs_windows": [
+      "%USERPROFILE%\\.cargo\\bin"
+    ],
+    "path_dirs_linux": [
+      "$HOME/.cargo/bin"
+    ],
+    "path_dirs_mac": [
+      "$HOME/.cargo/bin"
+    ],
     "path_required": true
   },
   {
@@ -360,7 +423,9 @@
     "install_command_windows": "winget install --id Rustlang.Rust.MSVC -e --silent --accept-source-agreements --accept-package-agreements",
     "install_command_linux": "curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y",
     "install_command_mac": "curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y",
-    "path_dirs_windows": ["%USERPROFILE%\\.cargo\\bin"],
+    "path_dirs_windows": [
+      "%USERPROFILE%\\.cargo\\bin"
+    ],
     "path_required": true
   },
   {
@@ -372,8 +437,12 @@
     "install_command_windows": "winget install --id Microsoft.DotNet.SDK.8 -e --silent --accept-source-agreements --accept-package-agreements",
     "install_command_linux": "sudo apt-get install -y dotnet-sdk-8.0",
     "install_command_mac": "brew install dotnet-sdk",
-    "path_dirs_windows": ["C:\\Program Files\\dotnet"],
-    "path_dirs_linux": ["/usr/share/dotnet"],
+    "path_dirs_windows": [
+      "C:\\Program Files\\dotnet"
+    ],
+    "path_dirs_linux": [
+      "/usr/share/dotnet"
+    ],
     "path_required": true
   },
   {
@@ -385,7 +454,9 @@
     "install_command_windows": "winget install --id Microsoft.DotNet.SDK.8 -e --silent --accept-source-agreements --accept-package-agreements",
     "install_command_linux": "sudo apt-get install -y dotnet-sdk-8.0",
     "install_command_mac": "brew install dotnet-sdk",
-    "path_dirs_windows": ["C:\\Program Files\\dotnet"],
+    "path_dirs_windows": [
+      "C:\\Program Files\\dotnet"
+    ],
     "path_required": true
   },
   {
@@ -397,7 +468,9 @@
     "install_command_windows": "winget install --id Kotlin.Kotlin -e --silent --accept-source-agreements --accept-package-agreements",
     "install_command_linux": "sudo snap install --classic kotlin",
     "install_command_mac": "brew install kotlin",
-    "path_dirs_windows": ["C:\\Program Files\\JetBrains\\Kotlin\\bin"],
+    "path_dirs_windows": [
+      "C:\\Program Files\\JetBrains\\Kotlin\\bin"
+    ],
     "path_required": true
   },
   {
@@ -409,7 +482,9 @@
     "install_command_windows": "winget install --id Scala.Scala.3 -e --silent --accept-source-agreements --accept-package-agreements",
     "install_command_linux": "sudo apt-get install -y scala",
     "install_command_mac": "brew install scala",
-    "path_dirs_windows": ["C:\\Program Files (x86)\\scala\\bin"],
+    "path_dirs_windows": [
+      "C:\\Program Files (x86)\\scala\\bin"
+    ],
     "path_required": true
   },
   {
@@ -421,7 +496,9 @@
     "install_command_windows": "winget install --id Apache.Groovy -e --silent --accept-source-agreements --accept-package-agreements",
     "install_command_linux": "sudo apt-get install -y groovy",
     "install_command_mac": "brew install groovy",
-    "path_dirs_windows": ["C:\\Program Files\\Groovy\\bin"],
+    "path_dirs_windows": [
+      "C:\\Program Files\\Groovy\\bin"
+    ],
     "path_required": true
   },
   {
@@ -444,7 +521,9 @@
     "install_command_windows": "winget install --id Google.DartSDK -e --silent --accept-source-agreements --accept-package-agreements",
     "install_command_linux": "sudo apt-get install -y dart",
     "install_command_mac": "brew install dart",
-    "path_dirs_windows": ["C:\\tools\\dart-sdk\\bin"],
+    "path_dirs_windows": [
+      "C:\\tools\\dart-sdk\\bin"
+    ],
     "path_required": true
   },
   {
@@ -470,8 +549,12 @@
     "install_command_windows": "winget install --id RubyInstallerTeam.Ruby.3.3 -e --silent --accept-source-agreements --accept-package-agreements",
     "install_command_linux": "sudo apt-get install -y ruby-full",
     "install_command_mac": "brew install ruby",
-    "path_dirs_windows": ["C:\\Ruby33-x64\\bin"],
-    "path_dirs_mac": ["/usr/local/opt/ruby/bin"],
+    "path_dirs_windows": [
+      "C:\\Ruby33-x64\\bin"
+    ],
+    "path_dirs_mac": [
+      "/usr/local/opt/ruby/bin"
+    ],
     "path_required": true
   },
   {
@@ -483,7 +566,9 @@
     "install_command_windows": "winget install --id RubyInstallerTeam.Ruby.3.3 -e --silent --accept-source-agreements --accept-package-agreements",
     "install_command_linux": "sudo apt-get install -y ruby-full",
     "install_command_mac": "brew install ruby",
-    "path_dirs_windows": ["C:\\Ruby33-x64\\bin"],
+    "path_dirs_windows": [
+      "C:\\Ruby33-x64\\bin"
+    ],
     "path_required": true
   },
   {
@@ -495,7 +580,9 @@
     "install_command_windows": "winget install --id PHP.PHP -e --silent --accept-source-agreements --accept-package-agreements",
     "install_command_linux": "sudo apt-get install -y php php-cli php-mbstring",
     "install_command_mac": "brew install php",
-    "path_dirs_windows": ["C:\\php"],
+    "path_dirs_windows": [
+      "C:\\php"
+    ],
     "path_required": true
   },
   {
@@ -549,7 +636,7 @@
     "description": "Just-In-Time compiler for Lua — extremely fast",
     "category": "Compilers",
     "detect_cmd": "luajit -v",
-    "install_command_windows": "",
+    "install_command_windows": "winget install --id Lua.Lua -e --silent --accept-source-agreements --accept-package-agreements",
     "install_command_linux": "sudo apt-get install -y luajit",
     "install_command_mac": "brew install luajit",
     "path_required": false
@@ -578,7 +665,9 @@
     "install_command_windows": "winget install --id RProject.R -e --silent --accept-source-agreements --accept-package-agreements",
     "install_command_linux": "sudo apt-get install -y r-base",
     "install_command_mac": "brew install r",
-    "path_dirs_windows": ["C:\\Program Files\\R\\R-4.*\\bin"],
+    "path_dirs_windows": [
+      "C:\\Program Files\\R\\R-4.*\\bin"
+    ],
     "path_required": true
   },
   {
@@ -590,7 +679,10 @@
     "install_command_windows": "winget install --id Haskell.GHCup -e --silent --accept-source-agreements --accept-package-agreements",
     "install_command_linux": "sudo apt-get install -y ghc cabal-install",
     "install_command_mac": "brew install ghc cabal-install",
-    "path_dirs_windows": ["%APPDATA%\\ghcup\\bin", "%APPDATA%\\cabal\\bin"],
+    "path_dirs_windows": [
+      "%APPDATA%\\ghcup\\bin",
+      "%APPDATA%\\cabal\\bin"
+    ],
     "path_required": true
   },
   {
@@ -602,7 +694,9 @@
     "install_command_windows": "winget install --id OCaml.opam -e --silent --accept-source-agreements --accept-package-agreements",
     "install_command_linux": "sudo apt-get install -y ocaml opam",
     "install_command_mac": "brew install ocaml opam",
-    "path_dirs_windows": ["%LOCALAPPDATA%\\opam\\default\\bin"],
+    "path_dirs_windows": [
+      "%LOCALAPPDATA%\\opam\\default\\bin"
+    ],
     "path_required": true
   },
   {
@@ -614,7 +708,9 @@
     "install_command_windows": "winget install --id Erlang.ErlangOTP -e --silent --accept-source-agreements --accept-package-agreements",
     "install_command_linux": "sudo apt-get install -y erlang",
     "install_command_mac": "brew install erlang",
-    "path_dirs_windows": ["C:\\Program Files\\Erlang OTP\\bin"],
+    "path_dirs_windows": [
+      "C:\\Program Files\\Erlang OTP\\bin"
+    ],
     "path_required": true
   },
   {
@@ -626,7 +722,9 @@
     "install_command_windows": "winget install --id ElixirLang.Elixir -e --silent --accept-source-agreements --accept-package-agreements",
     "install_command_linux": "sudo apt-get install -y elixir",
     "install_command_mac": "brew install elixir",
-    "path_dirs_windows": ["C:\\Program Files\\Elixir\\bin"],
+    "path_dirs_windows": [
+      "C:\\Program Files\\Elixir\\bin"
+    ],
     "path_required": true
   },
   {
@@ -638,7 +736,9 @@
     "install_command_windows": "winget install --id zig-lang.zig -e --silent --accept-source-agreements --accept-package-agreements",
     "install_command_linux": "sudo snap install zig --classic --beta",
     "install_command_mac": "brew install zig",
-    "path_dirs_windows": ["C:\\Program Files\\zig"],
+    "path_dirs_windows": [
+      "C:\\Program Files\\zig"
+    ],
     "path_required": true
   },
   {
@@ -662,7 +762,7 @@
     "description": "Ruby-like compiled systems language",
     "category": "Languages",
     "detect_cmd": "crystal --version",
-    "install_command_windows": "",
+    "install_command_windows": "winget install -e --id Crystal.Crystal --accept-source-agreements",
     "install_command_linux": "sudo apt-get install -y crystal",
     "install_command_mac": "brew install crystal",
     "path_required": false
@@ -673,7 +773,7 @@
     "description": "Simple, fast, compiled systems language",
     "category": "Languages",
     "detect_cmd": "v version",
-    "install_command_windows": "",
+    "install_command_windows": "winget install --id Vlang.V -e --silent --accept-source-agreements --accept-package-agreements",
     "install_command_linux": "sudo snap install vlang",
     "install_command_mac": "brew install vlang",
     "path_required": false
@@ -687,7 +787,9 @@
     "install_command_windows": "winget install --id DLang.Dmd -e --silent --accept-source-agreements --accept-package-agreements",
     "install_command_linux": "sudo apt-get install -y dmd",
     "install_command_mac": "brew install dmd",
-    "path_dirs_windows": ["C:\\D\\dmd2\\windows\\bin"],
+    "path_dirs_windows": [
+      "C:\\D\\dmd2\\windows\\bin"
+    ],
     "path_required": true
   },
   {
@@ -696,7 +798,7 @@
     "description": "Modern systems language — alternative to C",
     "category": "Languages",
     "detect_cmd": "odin version",
-    "install_command_windows": "",
+    "install_command_windows": "winget install --id odin-lang.Odin -e --silent --accept-source-agreements --accept-package-agreements",
     "install_command_linux": "",
     "install_command_mac": "brew install odin",
     "path_required": false
@@ -722,7 +824,7 @@
     "description": "Open-source COBOL compiler",
     "category": "Compilers",
     "detect_cmd": "cobc --version",
-    "install_command_windows": "",
+    "install_command_windows": "winget install -e --id OpenCobolIDE.OpenCobolIDE --accept-source-agreements --accept-package-agreements",
     "install_command_linux": "sudo apt-get install -y gnucobol",
     "install_command_mac": "brew install gnucobol",
     "path_required": false
@@ -733,7 +835,7 @@
     "description": "Ada compiler from the GCC suite",
     "category": "Compilers",
     "detect_cmd": "gnat --version",
-    "install_command_windows": "",
+    "install_command_windows": "winget install --id GNAT.GNATCommunity -e --silent --accept-source-agreements",
     "install_command_linux": "sudo apt-get install -y gnat",
     "install_command_mac": "brew install gnat",
     "path_required": false
@@ -747,7 +849,9 @@
     "install_command_windows": "winget install --id SWI-Prolog.SWI-Prolog -e --silent --accept-source-agreements --accept-package-agreements",
     "install_command_linux": "sudo apt-get install -y swi-prolog",
     "install_command_mac": "brew install swi-prolog",
-    "path_dirs_windows": ["C:\\Program Files\\swipl\\bin"],
+    "path_dirs_windows": [
+      "C:\\Program Files\\swipl\\bin"
+    ],
     "path_required": true
   },
   {
@@ -759,7 +863,9 @@
     "install_command_windows": "winget install --id Racket.Racket -e --silent --accept-source-agreements --accept-package-agreements",
     "install_command_linux": "sudo apt-get install -y racket",
     "install_command_mac": "brew install racket",
-    "path_dirs_windows": ["C:\\Program Files\\Racket"],
+    "path_dirs_windows": [
+      "C:\\Program Files\\Racket"
+    ],
     "path_required": true
   },
   {
@@ -768,7 +874,7 @@
     "description": "Classic Scheme implementation for education",
     "category": "Languages",
     "detect_cmd": "mit-scheme --version",
-    "install_command_windows": "",
+    "install_command_windows": "winget install --id MIT.GNU.Scheme -e --silent --accept-source-agreements",
     "install_command_linux": "sudo apt-get install -y mit-scheme",
     "install_command_mac": "brew install mit-scheme",
     "path_required": false
@@ -782,7 +888,9 @@
     "install_command_windows": "winget install --id SteelBankCommonLisp.SBCL -e --silent --accept-source-agreements --accept-package-agreements",
     "install_command_linux": "sudo apt-get install -y sbcl",
     "install_command_mac": "brew install sbcl",
-    "path_dirs_windows": ["C:\\Program Files\\Steel Bank Common Lisp"],
+    "path_dirs_windows": [
+      "C:\\Program Files\\Steel Bank Common Lisp"
+    ],
     "path_required": true
   },
   {
@@ -794,8 +902,12 @@
     "install_command_windows": "winget install --id DenoLand.Deno -e --silent --accept-source-agreements --accept-package-agreements",
     "install_command_linux": "curl -fsSL https://deno.land/install.sh | sh",
     "install_command_mac": "brew install deno",
-    "path_dirs_windows": ["%USERPROFILE%\\.deno\\bin"],
-    "path_dirs_linux": ["$HOME/.deno/bin"],
+    "path_dirs_windows": [
+      "%USERPROFILE%\\.deno\\bin"
+    ],
+    "path_dirs_linux": [
+      "$HOME/.deno/bin"
+    ],
     "path_required": true
   },
   {
@@ -807,8 +919,12 @@
     "install_command_windows": "winget install --id Oven-sh.Bun -e --silent --accept-source-agreements --accept-package-agreements",
     "install_command_linux": "curl -fsSL https://bun.sh/install | bash",
     "install_command_mac": "brew install oven-sh/bun/bun",
-    "path_dirs_windows": ["%USERPROFILE%\\.bun\\bin"],
-    "path_dirs_linux": ["$HOME/.bun/bin"],
+    "path_dirs_windows": [
+      "%USERPROFILE%\\.bun\\bin"
+    ],
+    "path_dirs_linux": [
+      "$HOME/.bun/bin"
+    ],
     "path_required": true
   },
   {
@@ -846,7 +962,9 @@
     "install_command_windows": "winget install --id Microsoft.VisualStudioCode -e --silent --accept-source-agreements --accept-package-agreements",
     "install_command_linux": "sudo snap install --classic code",
     "install_command_mac": "brew install --cask visual-studio-code",
-    "path_dirs_windows": ["%LOCALAPPDATA%\\Programs\\Microsoft VS Code\\bin"],
+    "path_dirs_windows": [
+      "%LOCALAPPDATA%\\Programs\\Microsoft VS Code\\bin"
+    ],
     "path_required": true
   },
   {
@@ -858,7 +976,9 @@
     "install_command_windows": "winget install --id SublimeHQ.SublimeText.4 -e --silent --accept-source-agreements --accept-package-agreements",
     "install_command_linux": "sudo snap install --classic sublime-text",
     "install_command_mac": "brew install --cask sublime-text",
-    "path_dirs_windows": ["C:\\Program Files\\Sublime Text"],
+    "path_dirs_windows": [
+      "C:\\Program Files\\Sublime Text"
+    ],
     "path_required": true
   },
   {
@@ -870,7 +990,9 @@
     "install_command_windows": "winget install --id Neovim.Neovim -e --silent --accept-source-agreements --accept-package-agreements",
     "install_command_linux": "sudo apt-get install -y neovim",
     "install_command_mac": "brew install neovim",
-    "path_dirs_windows": ["C:\\Program Files\\Neovim\\bin"],
+    "path_dirs_windows": [
+      "C:\\Program Files\\Neovim\\bin"
+    ],
     "path_required": true
   },
   {
@@ -882,7 +1004,9 @@
     "install_command_windows": "winget install --id JetBrains.IntelliJIDEA.Community -e --silent --accept-source-agreements --accept-package-agreements",
     "install_command_linux": "sudo snap install intellij-idea-community --classic",
     "install_command_mac": "brew install --cask intellij-idea-ce",
-    "path_dirs_windows": ["C:\\Program Files\\JetBrains\\IntelliJ IDEA Community Edition*\\bin"],
+    "path_dirs_windows": [
+      "C:\\Program Files\\JetBrains\\IntelliJ IDEA Community Edition*\\bin"
+    ],
     "path_required": true
   },
   {
@@ -894,7 +1018,9 @@
     "install_command_windows": "winget install --id Microsoft.DotNet.SDK.8 -e --silent --accept-source-agreements --accept-package-agreements",
     "install_command_linux": "sudo apt-get install -y dotnet-sdk-8.0",
     "install_command_mac": "brew install dotnet-sdk",
-    "path_dirs_windows": ["C:\\Program Files\\dotnet"],
+    "path_dirs_windows": [
+      "C:\\Program Files\\dotnet"
+    ],
     "path_required": true
   },
   {
@@ -906,7 +1032,10 @@
     "install_command_windows": "winget install --id Google.Flutter -e --silent --accept-source-agreements --accept-package-agreements",
     "install_command_linux": "sudo snap install flutter --classic",
     "install_command_mac": "brew install flutter",
-    "path_dirs_windows": ["C:\\flutter\\bin", "%LOCALAPPDATA%\\flutter\\bin"],
+    "path_dirs_windows": [
+      "C:\\flutter\\bin",
+      "%LOCALAPPDATA%\\flutter\\bin"
+    ],
     "path_required": true
   },
   {
@@ -933,7 +1062,9 @@
     "install_command_windows": "npm install -g react-native-cli",
     "install_command_linux": "npm install -g react-native-cli",
     "install_command_mac": "npm install -g react-native-cli",
-    "path_dirs_windows": ["%APPDATA%\\npm"],
+    "path_dirs_windows": [
+      "%APPDATA%\\npm"
+    ],
     "path_required": true
   },
   {
@@ -945,7 +1076,9 @@
     "install_command_windows": "winget install --id Docker.DockerDesktop -e --silent --accept-source-agreements --accept-package-agreements",
     "install_command_linux": "sudo apt-get install -y docker.io docker-compose",
     "install_command_mac": "brew install --cask docker",
-    "path_dirs_windows": ["C:\\Program Files\\Docker\\Docker\\resources\\bin"],
+    "path_dirs_windows": [
+      "C:\\Program Files\\Docker\\Docker\\resources\\bin"
+    ],
     "path_required": true
   },
   {
@@ -1023,7 +1156,9 @@
     "install_command_windows": "winget install --id Amazon.AWSCLI -e --silent --accept-source-agreements --accept-package-agreements",
     "install_command_linux": "sudo apt-get install -y awscli",
     "install_command_mac": "brew install awscli",
-    "path_dirs_windows": ["C:\\Program Files\\Amazon\\AWSCLIV2"],
+    "path_dirs_windows": [
+      "C:\\Program Files\\Amazon\\AWSCLIV2"
+    ],
     "path_required": true
   },
   {
@@ -1140,7 +1275,9 @@
     "install_command_windows": "winget install --id Oracle.MySQL -e --silent --accept-source-agreements --accept-package-agreements",
     "install_command_linux": "sudo apt-get install -y mysql-server",
     "install_command_mac": "brew install mysql",
-    "path_dirs_windows": ["C:\\Program Files\\MySQL\\MySQL Server 8.*\\bin"],
+    "path_dirs_windows": [
+      "C:\\Program Files\\MySQL\\MySQL Server 8.*\\bin"
+    ],
     "path_required": true
   },
   {
@@ -1152,7 +1289,9 @@
     "install_command_windows": "winget install --id PostgreSQL.PostgreSQL -e --silent --accept-source-agreements --accept-package-agreements",
     "install_command_linux": "sudo apt-get install -y postgresql postgresql-client",
     "install_command_mac": "brew install postgresql",
-    "path_dirs_windows": ["C:\\Program Files\\PostgreSQL\\16\\bin"],
+    "path_dirs_windows": [
+      "C:\\Program Files\\PostgreSQL\\16\\bin"
+    ],
     "path_required": true
   },
   {
@@ -1164,7 +1303,9 @@
     "install_command_windows": "winget install --id MongoDB.Server -e --silent --accept-source-agreements --accept-package-agreements",
     "install_command_linux": "sudo apt-get install -y mongodb",
     "install_command_mac": "brew install mongodb-community",
-    "path_dirs_windows": ["C:\\Program Files\\MongoDB\\Server\\7.*\\bin"],
+    "path_dirs_windows": [
+      "C:\\Program Files\\MongoDB\\Server\\7.*\\bin"
+    ],
     "path_required": true
   },
   {
@@ -1187,7 +1328,9 @@
     "install_command_windows": "winget install --id SQLite.SQLite -e --silent --accept-source-agreements --accept-package-agreements",
     "install_command_linux": "sudo apt-get install -y sqlite3",
     "install_command_mac": "brew install sqlite",
-    "path_dirs_windows": ["C:\\Program Files\\SQLite"],
+    "path_dirs_windows": [
+      "C:\\Program Files\\SQLite"
+    ],
     "path_required": true
   },
   {
@@ -1199,7 +1342,9 @@
     "install_command_windows": "npm install -g solc",
     "install_command_linux": "npm install -g solc",
     "install_command_mac": "brew install solidity",
-    "path_dirs_windows": ["%APPDATA%\\npm"],
+    "path_dirs_windows": [
+      "%APPDATA%\\npm"
+    ],
     "path_required": true
   },
   {
@@ -1211,7 +1356,9 @@
     "install_command_windows": "winget install --id LLVM.LLVM -e --silent --accept-source-agreements --accept-package-agreements",
     "install_command_linux": "sudo apt-get install -y lldb",
     "install_command_mac": "brew install llvm",
-    "path_dirs_windows": ["C:\\Program Files\\LLVM\\bin"],
+    "path_dirs_windows": [
+      "C:\\Program Files\\LLVM\\bin"
+    ],
     "path_required": true
   },
   {
@@ -1223,7 +1370,9 @@
     "install_command_windows": "winget install --id MSYS2.MSYS2 -e --silent --accept-source-agreements --accept-package-agreements && C:\\msys64\\usr\\bin\\pacman.exe -S --noconfirm mingw-w64-x86_64-gdb",
     "install_command_linux": "sudo apt-get install -y gdb",
     "install_command_mac": "brew install gdb",
-    "path_dirs_windows": ["C:\\msys64\\mingw64\\bin"],
+    "path_dirs_windows": [
+      "C:\\msys64\\mingw64\\bin"
+    ],
     "path_required": true
   },
   {
@@ -1232,7 +1381,7 @@
     "description": "Memory debugging and profiling tool",
     "category": "DevOps & Tools",
     "detect_cmd": "valgrind --version",
-    "install_command_windows": "",
+    "install_command_windows": "wsl --install",
     "install_command_linux": "sudo apt-get install -y valgrind",
     "install_command_mac": "brew install valgrind",
     "path_required": false
@@ -1279,7 +1428,10 @@
     "install_command_windows": "winget install --id Emscripten.Emscripten -e --silent --accept-source-agreements --accept-package-agreements",
     "install_command_linux": "sudo apt-get install -y emscripten",
     "install_command_mac": "brew install emscripten",
-    "path_dirs_windows": ["C:\\emsdk", "C:\\emsdk\\upstream\\emscripten"],
+    "path_dirs_windows": [
+      "C:\\emsdk",
+      "C:\\emsdk\\upstream\\emscripten"
+    ],
     "path_required": true
   },
   {
@@ -1288,7 +1440,7 @@
     "description": "Standalone WebAssembly runtime",
     "category": "Compilers",
     "detect_cmd": "wasmtime --version",
-    "install_command_windows": "",
+    "install_command_windows": "winget install --id BytecodeAlliance.Wasmtime -e --silent --accept-source-agreements --accept-package-agreements",
     "install_command_linux": "curl https://wasmtime.dev/install.sh -sSf | bash",
     "install_command_mac": "brew install wasmtime",
     "path_required": false
@@ -1302,7 +1454,9 @@
     "install_command_windows": "winget install --id Google.Protobuf -e --silent --accept-source-agreements --accept-package-agreements",
     "install_command_linux": "sudo apt-get install -y protobuf-compiler",
     "install_command_mac": "brew install protobuf",
-    "path_dirs_windows": ["C:\\Program Files\\protoc\\bin"],
+    "path_dirs_windows": [
+      "C:\\Program Files\\protoc\\bin"
+    ],
     "path_required": true
   },
   {
@@ -1311,7 +1465,7 @@
     "description": "curl-like tool for gRPC servers",
     "category": "DevOps & Tools",
     "detect_cmd": "grpcurl --version",
-    "install_command_windows": "",
+    "install_command_windows": "winget install --id fullstorydev.grpcurl -e --silent --accept-source-agreements --accept-package-agreements",
     "install_command_linux": "go install github.com/fullstorydev/grpcurl/cmd/grpcurl@latest",
     "install_command_mac": "brew install grpcurl",
     "path_required": false
@@ -1325,7 +1479,9 @@
     "install_command_windows": "winget install --id Rustlang.Rustup -e --silent --accept-source-agreements --accept-package-agreements",
     "install_command_linux": "curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y",
     "install_command_mac": "curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y",
-    "path_dirs_windows": ["%USERPROFILE%\\.cargo\\bin"],
+    "path_dirs_windows": [
+      "%USERPROFILE%\\.cargo\\bin"
+    ],
     "path_required": true
   },
   {
@@ -1337,7 +1493,9 @@
     "install_command_windows": "winget install --id Microsoft.Vcpkg -e --silent --accept-source-agreements --accept-package-agreements",
     "install_command_linux": "",
     "install_command_mac": "",
-    "path_dirs_windows": ["C:\\vcpkg"],
+    "path_dirs_windows": [
+      "C:\\vcpkg"
+    ],
     "path_required": true
   },
   {
@@ -1371,7 +1529,9 @@
     "install_command_windows": "pip install poetry",
     "install_command_linux": "pip3 install poetry",
     "install_command_mac": "brew install poetry",
-    "path_dirs_windows": ["%APPDATA%\\Python\\Scripts"],
+    "path_dirs_windows": [
+      "%APPDATA%\\Python\\Scripts"
+    ],
     "path_required": true
   },
   {
@@ -1391,7 +1551,7 @@
     "description": "macOS/Linux package manager",
     "category": "Package Managers",
     "detect_cmd": "brew --version",
-    "install_command_windows": "",
+    "install_command_windows": "echo Homebrew is native to macOS/Linux",
     "install_command_linux": "/bin/bash -c \"$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)\"",
     "install_command_mac": "/bin/bash -c \"$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)\"",
     "path_required": false
@@ -1405,7 +1565,9 @@
     "install_command_windows": "powershell -Command \"Set-ExecutionPolicy RemoteSigned -Scope CurrentUser -Force; irm get.scoop.sh | iex\"",
     "install_command_linux": "",
     "install_command_mac": "",
-    "path_dirs_windows": ["%USERPROFILE%\\scoop\\shims"],
+    "path_dirs_windows": [
+      "%USERPROFILE%\\scoop\\shims"
+    ],
     "path_required": true
   },
   {
@@ -1417,7 +1579,9 @@
     "install_command_windows": "powershell -Command \"Set-ExecutionPolicy Bypass -Scope Process -Force; [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072; iex ((New-Object System.Net.WebClient).DownloadString('https://community.chocolatey.org/install.ps1'))\"",
     "install_command_linux": "",
     "install_command_mac": "",
-    "path_dirs_windows": ["C:\\ProgramData\\chocolatey\\bin"],
+    "path_dirs_windows": [
+      "C:\\ProgramData\\chocolatey\\bin"
+    ],
     "path_required": true
   },
   {
@@ -1440,7 +1604,9 @@
     "install_command_windows": "winget install --id Microsoft.PowerShell -e --silent --accept-source-agreements --accept-package-agreements",
     "install_command_linux": "sudo apt-get install -y powershell",
     "install_command_mac": "brew install powershell",
-    "path_dirs_windows": ["C:\\Program Files\\PowerShell\\7"],
+    "path_dirs_windows": [
+      "C:\\Program Files\\PowerShell\\7"
+    ],
     "path_required": true
   },
   {
@@ -1496,7 +1662,9 @@
     "install_command_windows": "winget install --id Gyan.FFmpeg -e --silent --accept-source-agreements --accept-package-agreements",
     "install_command_linux": "sudo apt-get install -y ffmpeg",
     "install_command_mac": "brew install ffmpeg",
-    "path_dirs_windows": ["C:\\ffmpeg\\bin"],
+    "path_dirs_windows": [
+      "C:\\ffmpeg\\bin"
+    ],
     "path_required": true
   },
   {
@@ -1508,7 +1676,9 @@
     "install_command_windows": "winget install --id ImageMagick.ImageMagick -e --silent --accept-source-agreements --accept-package-agreements",
     "install_command_linux": "sudo apt-get install -y imagemagick",
     "install_command_mac": "brew install imagemagick",
-    "path_dirs_windows": ["C:\\Program Files\\ImageMagick-7.*-Q16-HDRI"],
+    "path_dirs_windows": [
+      "C:\\Program Files\\ImageMagick-7.*-Q16-HDRI"
+    ],
     "path_required": true
   },
   {
@@ -1520,7 +1690,9 @@
     "install_command_windows": "winget install --id 7zip.7zip -e --silent --accept-source-agreements --accept-package-agreements",
     "install_command_linux": "sudo apt-get install -y p7zip-full",
     "install_command_mac": "brew install p7zip",
-    "path_dirs_windows": ["C:\\Program Files\\7-Zip"],
+    "path_dirs_windows": [
+      "C:\\Program Files\\7-Zip"
+    ],
     "path_required": true
   },
   {
