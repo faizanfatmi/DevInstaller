@@ -233,7 +233,10 @@ class UpdateDialog(QDialog):
         self.update_btn.setEnabled(False)
         self.update_btn.setVisible(False)
         self.later_btn.setText("Cancel")
-        self.later_btn.disconnect()
+        try:
+            self.later_btn.clicked.disconnect()
+        except Exception:
+            pass
         self.later_btn.clicked.connect(self._on_cancel_download)
 
         # Prepare destination file

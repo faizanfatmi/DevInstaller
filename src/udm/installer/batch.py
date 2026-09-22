@@ -126,6 +126,9 @@ def install_selected(
 
     When *force* is True, already-detected tools will run their installer/update
     command instead of being skipped.
+
+    Oracle-linked tools are separated and handled by the dedicated
+    ``oracle_lifecycle`` function before the parallel batch begins.
     """
     if not tools:
         return {}
@@ -134,12 +137,35 @@ def install_selected(
         ensure_windows_prerequisites()
 
     results: dict[str, str] = {}
-    total = len(tools)
+
+    # ── Separate Oracle-linked tools from normal tools ────────────────
+    from udm.installer.oracle import is_oracle_tool, oracle_lifecycle
+
+    oracle_tools = [t for t in tools if is_oracle_tool(t)]
+    normal_tools = [t for t in tools if not is_oracle_tool(t)]
+
+    # Process Oracle tools first (sequentially, with full lifecycle)
+    if oracle_tools:
+        log("════════════════════════════════════════════════════════")
+        log(f"  Processing {len(oracle_tools)} Oracle tool(s) "
+            "(sequential — uninstall/install lifecycle)…")
+        log("════════════════════════════════════════════════════════")
+        oracle_results = oracle_lifecycle(oracle_tools)
+        results.update(oracle_results)
+
+        # If no normal tools remain, we're done
+        if not normal_tools:
+            notify("Done", "All tasks complete", 100)
+            if on_complete:
+                on_complete(results)
+            return results
+
+    total = len(normal_tools)
 
     if total == 1:
         progress_lock = threading.Lock()
         completed_counter = [0]
-        key, status = _install_one(tools[0], 0, 1, progress_lock, completed_counter, force=force)
+        key, status = _install_one(normal_tools[0], 0, 1, progress_lock, completed_counter, force=force)
         results[key] = status
         notify("Done", "All tasks complete", 100)
         if on_complete:
@@ -163,7 +189,7 @@ def install_selected(
             executor.submit(
                 _install_one, tool, idx, total, progress_lock, completed_counter, force
             ): tool
-            for idx, tool in enumerate(tools)
+            for idx, tool in enumerate(normal_tools)
         }
 
         for future in as_completed(futures):

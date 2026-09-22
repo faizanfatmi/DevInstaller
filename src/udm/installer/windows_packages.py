@@ -103,6 +103,8 @@ WINGET_TO_CHOCO_MAP: dict[str, str] = {
     "mongodb": "choco install mongodb -y",
     "redis": "choco install redis-64 -y",
     "sqlite": "choco install sqlite -y",
+    "oracle_db_xe": "__oracle_custom__",
+    "oracle_sql_developer": "__oracle_custom__",
 
     # ── DevOps & Tools ──
     "git": "choco install git -y",

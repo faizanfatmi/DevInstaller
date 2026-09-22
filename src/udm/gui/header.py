@@ -39,7 +39,7 @@ class HeaderBar(QWidget):
         header_content.setStyleSheet(f"background-color: {BG_HEADER};")
 
         layout = QHBoxLayout(header_content)
-        layout.setContentsMargins(20, 0, 20, 0)
+        layout.setContentsMargins(20, 0, 24, 0)
 
         # App icon + name
         brand_layout = QHBoxLayout()
@@ -118,15 +118,20 @@ class HeaderBar(QWidget):
 
         os_badge = QLabel(f"  {os_icon}  {os_text}  ▾")
         os_badge.setCursor(Qt.CursorShape.PointingHandCursor)
+        os_badge.setFixedHeight(32)
         os_badge.setStyleSheet(f"""
             QLabel {{
                 background-color: rgba(255, 255, 255, 0.05);
                 color: {FG};
                 border: 1px solid {BORDER};
                 border-radius: 6px;
-                padding: 6px 12px;
+                padding: 4px 12px;
                 font-size: 12px;
                 font-weight: 600;
+            }}
+            QLabel:hover {{
+                background-color: rgba(255, 255, 255, 0.09);
+                border-color: rgba(255, 255, 255, 0.2);
             }}
         """)
         layout.addWidget(os_badge)
@@ -135,12 +140,20 @@ class HeaderBar(QWidget):
 
         # ── User profile avatar ──
         user_section = QWidget()
+        user_section.setFixedHeight(40)
         user_section.setStyleSheet("background: transparent;")
         user_layout = QHBoxLayout(user_section)
         user_layout.setContentsMargins(0, 0, 0, 0)
         user_layout.setSpacing(8)
 
-        avatar = QLabel("F")
+        import os
+        raw_user = os.environ.get("USERNAME", os.environ.get("USER", "User"))
+        if raw_user.lower().startswith("faiza"):
+            display_name = "Faizan Fatmi"
+        else:
+            display_name = raw_user.capitalize()
+
+        avatar = QLabel(display_name[0] if display_name else "F")
         avatar.setFixedSize(34, 34)
         avatar.setAlignment(Qt.AlignmentFlag.AlignCenter)
         avatar.setStyleSheet("""
@@ -158,9 +171,7 @@ class HeaderBar(QWidget):
         user_info = QVBoxLayout()
         user_info.setSpacing(0)
 
-        import os
-        username = os.environ.get("USERNAME", os.environ.get("USER", "User"))
-        user_name = QLabel(username.capitalize())
+        user_name = QLabel(display_name)
         user_name.setStyleSheet(f"""
             color: {FG};
             font-size: 12px;
@@ -180,9 +191,11 @@ class HeaderBar(QWidget):
         user_layout.addLayout(user_info)
 
         dropdown_arrow = QLabel("▾")
+        dropdown_arrow.setFixedWidth(14)
+        dropdown_arrow.setAlignment(Qt.AlignmentFlag.AlignCenter)
         dropdown_arrow.setStyleSheet(f"""
             color: {FG_MUTED};
-            font-size: 10px;
+            font-size: 11px;
             background: transparent;
         """)
         user_layout.addWidget(dropdown_arrow)

@@ -692,16 +692,17 @@ class DetailPanel(QWidget):
     """Right-side detail panel showing selected package info — styled as a floating card."""
 
     install_requested = Signal(dict)
+    uninstall_requested = Signal(dict)
 
     def __init__(self, parent=None):
         super().__init__(parent)
-        self.setFixedWidth(340)
+        self.setFixedWidth(300)
         self.setStyleSheet("background: transparent; border: none;")
 
         self._current_tool = None
 
         outer_layout = QVBoxLayout(self)
-        outer_layout.setContentsMargins(4, 10, 18, 10)
+        outer_layout.setContentsMargins(2, 6, 12, 6)
         outer_layout.setSpacing(0)
 
         # Floating Card Container
@@ -722,58 +723,96 @@ class DetailPanel(QWidget):
         self.scroll = QScrollArea()
         self.scroll.setWidgetResizable(True)
         self.scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
-        self.scroll.setStyleSheet("border: none; background: transparent;")
+        self.scroll.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAsNeeded)
+        self.scroll.setStyleSheet("""
+            QScrollArea { border: none; background: transparent; }
+            QScrollBar:vertical {
+                width: 6px;
+                background: transparent;
+                margin: 0px;
+            }
+            QScrollBar::handle:vertical {
+                background: rgba(255, 255, 255, 0.15);
+                border-radius: 3px;
+                min-height: 20px;
+            }
+            QScrollBar::handle:vertical:hover {
+                background: rgba(255, 255, 255, 0.28);
+            }
+            QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical {
+                height: 0px;
+            }
+        """)
 
         self.content = QWidget()
         self.content.setStyleSheet("background: transparent; border: none;")
         self.content_layout = QVBoxLayout(self.content)
-        self.content_layout.setContentsMargins(18, 18, 18, 18)
-        self.content_layout.setSpacing(12)
+        self.content_layout.setContentsMargins(16, 16, 16, 16)
+        self.content_layout.setSpacing(10)
 
-        # ── Header: Icon + Name + Badge ──
+        # ── Header: Icon + (Name, Badges, Subtitle) ──
         header = QWidget()
         header.setStyleSheet("background: transparent; border: none;")
         header_layout = QHBoxLayout(header)
         header_layout.setContentsMargins(0, 0, 0, 0)
-        header_layout.setSpacing(12)
+        header_layout.setSpacing(10)
 
         self.tool_icon = QLabel()
-        self.tool_icon.setFixedSize(48, 48)
+        self.tool_icon.setFixedSize(44, 44)
         self.tool_icon.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.tool_icon.setStyleSheet("background: transparent; border: none;")
         py_icon_path = ICONS_DIR / "python.png"
         if py_icon_path.exists():
             pix = QPixmap(str(py_icon_path))
             if not pix.isNull():
-                self.tool_icon.setPixmap(pix.scaled(44, 44, Qt.AspectRatioMode.KeepAspectRatio, Qt.TransformationMode.SmoothTransformation))
+                self.tool_icon.setPixmap(pix.scaled(40, 40, Qt.AspectRatioMode.KeepAspectRatio, Qt.TransformationMode.SmoothTransformation))
         header_layout.addWidget(self.tool_icon)
 
         title_col = QVBoxLayout()
-        title_col.setSpacing(2)
+        title_col.setSpacing(4)
 
-        title_row = QHBoxLayout()
-        title_row.setSpacing(8)
+        # Row 1: Tool Name
         self.tool_name = QLabel("Python 3.12")
-        self.tool_name.setStyleSheet("color: #ffffff; font-size: 17px; font-weight: 700; background: transparent; border: none;")
-        title_row.addWidget(self.tool_name)
+        self.tool_name.setWordWrap(True)
+        self.tool_name.setStyleSheet("color: #ffffff; font-size: 16px; font-weight: 700; background: transparent; border: none;")
+        title_col.addWidget(self.tool_name)
+
+        # Row 2: Badges row (Installed, Popular) — dedicated row so badges NEVER truncate
+        badges_row = QHBoxLayout()
+        badges_row.setContentsMargins(0, 0, 0, 0)
+        badges_row.setSpacing(6)
+
+        self.installed_badge = QLabel("✓ Installed")
+        self.installed_badge.setStyleSheet("""
+            background-color: rgba(16, 185, 129, 0.18);
+            color: #34d399;
+            border: 1px solid rgba(16, 185, 129, 0.4);
+            border-radius: 9px;
+            padding: 2px 8px;
+            font-size: 10.5px;
+            font-weight: 700;
+        """)
+        self.installed_badge.setVisible(False)
+        badges_row.addWidget(self.installed_badge)
 
         self.popular_badge = QLabel("Popular")
         self.popular_badge.setStyleSheet("""
             background-color: rgba(16, 185, 129, 0.15);
             color: #34d399;
-            border-radius: 10px;
-            padding: 2px 9px;
-            font-size: 11px;
+            border-radius: 9px;
+            padding: 2px 8px;
+            font-size: 10.5px;
             font-weight: 600;
             border: none;
         """)
-        title_row.addWidget(self.popular_badge)
-        title_row.addStretch()
-        title_col.addLayout(title_row)
+        badges_row.addWidget(self.popular_badge)
+        badges_row.addStretch()
+        title_col.addLayout(badges_row)
 
+        # Row 3: Subtitle
         self.tool_subtitle = QLabel("General-purpose programming language")
         self.tool_subtitle.setWordWrap(True)
-        self.tool_subtitle.setStyleSheet("color: #94a3b8; font-size: 11.5px; background: transparent; border: none;")
+        self.tool_subtitle.setStyleSheet("color: #94a3b8; font-size: 11px; background: transparent; border: none;")
         title_col.addWidget(self.tool_subtitle)
 
         header_layout.addLayout(title_col, stretch=1)
@@ -860,18 +899,35 @@ class DetailPanel(QWidget):
 
         self.content_layout.addStretch()
 
-        # ── Install button ──
+        self.scroll.setWidget(self.content)
+        card_layout.addWidget(self.scroll, stretch=1)
+
+        # ── Pinned Bottom Actions Container (Never Cut Off) ──
+        self.action_container = QWidget()
+        self.action_container.setObjectName("detailActions")
+        self.action_container.setStyleSheet("""
+            QWidget#detailActions {
+                background-color: rgba(10, 15, 28, 0.75);
+                border-top: 1px solid rgba(255, 255, 255, 0.08);
+                border-bottom-left-radius: 14px;
+                border-bottom-right-radius: 14px;
+            }
+        """)
+        self.actions_layout = QVBoxLayout(self.action_container)
+        self.actions_layout.setContentsMargins(14, 10, 14, 12)
+        self.actions_layout.setSpacing(6)
+
         self.install_btn = ActionButton("⬇  Install Python 3.12", "primary")
-        self.install_btn.setMinimumHeight(44)
+        self.install_btn.setFixedHeight(40)
         self.install_btn.setStyleSheet("""
             QPushButton {
                 background: qlineargradient(x1:0, y1:0, x2:1, y2:0,
                     stop:0 #2563eb, stop:1 #3b82f6);
                 color: #ffffff;
                 border: none;
-                border-radius: 10px;
-                padding: 12px 24px;
-                font-size: 14px;
+                border-radius: 9px;
+                padding: 6px 16px;
+                font-size: 13.5px;
                 font-weight: 700;
             }
             QPushButton:hover {
@@ -884,13 +940,37 @@ class DetailPanel(QWidget):
             }
         """)
         self.install_btn.clicked.connect(self._on_install)
-        self.content_layout.addWidget(self.install_btn)
+        self.actions_layout.addWidget(self.install_btn)
 
-        self.scroll.setWidget(self.content)
-        card_layout.addWidget(self.scroll)
+        self.uninstall_btn = ActionButton("🗑️  Uninstall & Wipe Clean", "danger")
+        self.uninstall_btn.setFixedHeight(36)
+        self.uninstall_btn.setStyleSheet("""
+            QPushButton {
+                background-color: rgba(239, 68, 68, 0.15);
+                color: #f87171;
+                border: 1px solid rgba(239, 68, 68, 0.35);
+                border-radius: 9px;
+                padding: 6px 14px;
+                font-size: 12.5px;
+                font-weight: 700;
+            }
+            QPushButton:hover {
+                background-color: rgba(239, 68, 68, 0.28);
+                border-color: #ef4444;
+                color: #fecaca;
+            }
+            QPushButton:pressed {
+                background-color: rgba(220, 38, 38, 0.45);
+            }
+        """)
+        self.uninstall_btn.clicked.connect(self._on_uninstall)
+        self.uninstall_btn.setVisible(False)
+        self.actions_layout.addWidget(self.uninstall_btn)
+
+        card_layout.addWidget(self.action_container)
         outer_layout.addWidget(self.card)
 
-    def set_tool(self, tool: dict):
+    def set_tool(self, tool: dict, is_installed: bool = None):
         """Populate the detail panel with tool information."""
         self._current_tool = tool
         key = tool.get("key", "")
@@ -944,8 +1024,39 @@ class DetailPanel(QWidget):
         self.link_docs.set_url(meta.get("docs", ""))
         self.link_source.set_url(meta.get("source", ""))
 
-        self.install_btn.setText(f"⬇  Install {name}")
+        if is_installed is not None:
+            self.set_installed_state(is_installed)
+        else:
+            self.set_installed_state(False)
+
+    def set_installed_state(self, is_installed: bool):
+        """Update installed badge, install button, and uninstall button."""
+        self.installed_badge.setVisible(bool(is_installed))
+        if not self._current_tool:
+            self.uninstall_btn.setVisible(False)
+            return
+
+        key = self._current_tool.get("key", "")
+        name = "C++" if key == "gpp" else self._current_tool.get("name", "Unknown")
+
+        if is_installed:
+            self.uninstall_btn.setVisible(True)
+            if key == "oracle_db_xe":
+                self.uninstall_btn.setText("🗑️  Uninstall & Wipe Clean")
+            elif key == "oracle_sql_developer":
+                self.uninstall_btn.setText("🗑️  Uninstall & Clean")
+            else:
+                self.uninstall_btn.setText("🗑️  Uninstall")
+            self.install_btn.setText(f"🔄  Reinstall {name}")
+        else:
+            self.uninstall_btn.setVisible(False)
+            self.install_btn.setText(f"⬇  Install {name}")
 
     def _on_install(self):
         if self._current_tool:
             self.install_requested.emit(self._current_tool)
+
+    def _on_uninstall(self):
+        if self._current_tool:
+            self.uninstall_requested.emit(self._current_tool)
+

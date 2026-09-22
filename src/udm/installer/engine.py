@@ -106,6 +106,14 @@ def _needs_privilege(cmd: str) -> bool:
 
 def detect_tool(tool: dict) -> bool:
     """Return True if the tool is already present on the system."""
+    key = tool.get("key", "")
+    if key == "oracle_db_xe":
+        from udm.installer.oracle import detect_oracle_db
+        return detect_oracle_db()
+    elif key == "oracle_sql_developer":
+        from udm.installer.oracle import detect_sql_developer
+        return detect_sql_developer()
+
     detect_cmd = tool.get("detect_cmd", "")
     if not detect_cmd:
         return False
@@ -118,6 +126,100 @@ def detect_tool(tool: dict) -> bool:
         if rc2 == 0:
             return True
     return False
+
+
+def uninstall_tool(tool: dict) -> bool:
+    """Uninstall a tool using platform-specific commands or custom modules."""
+    name = tool.get("name", "Unknown")
+    key = tool.get("key", "")
+
+    # Oracle custom uninstaller
+    if key == "oracle_db_xe":
+        from udm.installer.oracle import uninstall_oracle_db
+        log(f"Uninstalling {name} (complete wipeout)…")
+        return uninstall_oracle_db()
+    elif key == "oracle_sql_developer":
+        from udm.installer.oracle import uninstall_sql_developer
+        log(f"Uninstalling {name}…")
+        return uninstall_sql_developer()
+
+    log(f"Uninstalling {name}…")
+
+    if is_windows():
+        cmd = tool.get("install_command_windows", "")
+        # Check winget command: winget install --id <Id> ...
+        if "winget install" in cmd:
+            import re
+            m = re.search(r"--id\s+([^\s]+)", cmd)
+            if m:
+                pkg_id = m.group(1)
+                uninst_cmd = f"winget uninstall --id {pkg_id} --silent --accept-source-agreements"
+                rc, out, err = run_command(uninst_cmd, timeout=300)
+                if rc == 0:
+                    log(f"  ✓ {name} uninstalled via winget.")
+                    return True
+                else:
+                    log(f"  ⚠ winget uninstall failed: {err}")
+        # Check choco command: choco install <pkg> -y
+        if "choco install" in cmd:
+            parts = cmd.split()
+            if len(parts) >= 3:
+                pkg = parts[2]
+                uninst_cmd = f"choco uninstall {pkg} -y"
+                rc, out, err = run_command(uninst_cmd, timeout=300)
+                if rc == 0:
+                    log(f"  ✓ {name} uninstalled via Chocolatey.")
+                    return True
+                else:
+                    log(f"  ⚠ choco uninstall failed: {err}")
+        log(f"  ⚠ No automatic uninstall command found for {name} on Windows.")
+        return False
+
+    elif is_linux():
+        cmd = tool.get("install_command_linux", "")
+        if "apt" in cmd or "apt-get" in cmd:
+            parts = cmd.split()
+            pkg = parts[-1]
+            rc, out, err = run_command(f"sudo apt-get remove -y {pkg}", timeout=300)
+            return rc == 0
+        elif "pacman" in cmd:
+            parts = cmd.split()
+            pkg = parts[-1]
+            rc, out, err = run_command(f"sudo pacman -R --noconfirm {pkg}", timeout=300)
+            return rc == 0
+        elif "dnf" in cmd:
+            parts = cmd.split()
+            pkg = parts[-1]
+            rc, out, err = run_command(f"sudo dnf remove -y {pkg}", timeout=300)
+            return rc == 0
+
+    elif is_mac():
+        cmd = tool.get("install_command_mac", "")
+        if "brew install" in cmd:
+            parts = cmd.split()
+            pkg = parts[-1]
+            rc, out, err = run_command(f"brew uninstall {pkg}", timeout=300)
+            return rc == 0
+
+    return False
+
+
+def can_uninstall(tool: dict) -> bool:
+    """Return True if DevInstaller knows how to uninstall this tool."""
+    key = tool.get("key", "")
+    if key in ("oracle_db_xe", "oracle_sql_developer"):
+        return True
+    if is_windows():
+        cmd = tool.get("install_command_windows", "")
+        return "winget install" in cmd or "choco install" in cmd
+    elif is_linux():
+        cmd = tool.get("install_command_linux", "")
+        return any(mgr in cmd for mgr in ("apt", "pacman", "dnf"))
+    elif is_mac():
+        cmd = tool.get("install_command_mac", "")
+        return "brew install" in cmd
+    return False
+
 
 
 def _run_linux_prerequisites(cmd: str) -> None:
@@ -144,6 +246,22 @@ def install_tool(tool: dict) -> bool:
         return False
 
     cmd = _get_install_cmd(tool)
+
+    # ── Oracle custom handler ────────────────────────────────────────
+    # Tools with the ``__oracle_custom__`` sentinel are handled by the
+    # dedicated oracle module; the batch installer calls oracle_lifecycle
+    # instead, but if a single Oracle tool reaches here directly, delegate.
+    if cmd == "__oracle_custom__":
+        from udm.installer.oracle import install_oracle_db, install_sql_developer
+
+        key = tool.get("key", "")
+        if key == "oracle_db_xe":
+            return install_oracle_db()
+        elif key == "oracle_sql_developer":
+            return install_sql_developer()
+        log(f"  ⚠ Unknown Oracle tool key: {key}")
+        return False
+
     if not cmd:
         if is_linux():
             log(

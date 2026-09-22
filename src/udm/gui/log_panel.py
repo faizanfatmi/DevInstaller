@@ -79,7 +79,7 @@ class LogPanel(QWidget):
         self._current_tab = "terminal"
 
         layout = QVBoxLayout(self)
-        layout.setContentsMargins(20, 8, 20, 0)
+        layout.setContentsMargins(12, 6, 12, 0)
         layout.setSpacing(0)
 
         # Header bar — tabs + actions
@@ -93,7 +93,7 @@ class LogPanel(QWidget):
                 border-top-right-radius: 12px;
             }
         """)
-        header.setFixedHeight(38)
+        header.setFixedHeight(34)
         header_layout = QHBoxLayout(header)
         header_layout.setContentsMargins(10, 0, 10, 0)
         header_layout.setSpacing(4)
@@ -111,7 +111,7 @@ class LogPanel(QWidget):
 
         # Clear button
         clear_btn = QPushButton("🗑  Clear")
-        clear_btn.setFixedHeight(26)
+        clear_btn.setFixedHeight(24)
         clear_btn.setCursor(Qt.CursorShape.PointingHandCursor)
         clear_btn.setStyleSheet("""
             QPushButton {
@@ -135,7 +135,7 @@ class LogPanel(QWidget):
 
         # Expand toggle button with icon
         toggle_btn = QPushButton()
-        toggle_btn.setFixedSize(26, 26)
+        toggle_btn.setFixedSize(24, 24)
         toggle_btn.setCursor(Qt.CursorShape.PointingHandCursor)
         expand_icon_path = ICONS_DIR / "icon_expand.png"
         if expand_icon_path.exists():
@@ -160,7 +160,7 @@ class LogPanel(QWidget):
         # Log text area
         self.text_edit = QTextEdit()
         self.text_edit.setReadOnly(True)
-        self.text_edit.setFixedHeight(142)
+        self.text_edit.setFixedHeight(115)
         self.text_edit.setStyleSheet("""
             QTextEdit {
                 background-color: rgba(10, 15, 28, 0.95);

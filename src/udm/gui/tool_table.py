@@ -52,6 +52,42 @@ TOOL_EMOJI_FALLBACK = {
 }
 
 
+class ElidedLabel(QLabel):
+    """QLabel that automatically truncates text with an ellipsis (...) to fit its width."""
+
+    def __init__(self, text: str = "", parent=None):
+        super().__init__(parent)
+        self._full_text = text
+        self.setMinimumWidth(0)
+        self.setSizePolicy(QSizePolicy.Policy.Ignored, QSizePolicy.Policy.Preferred)
+        if text:
+            self._update_elide()
+
+    def setText(self, text: str):
+        self._full_text = text
+        self._update_elide()
+
+    def set_full_text(self, text: str):
+        self._full_text = text
+        self._update_elide()
+
+    def resizeEvent(self, event):
+        super().resizeEvent(event)
+        self._update_elide()
+
+    def _update_elide(self):
+        if not self._full_text:
+            super().setText("")
+            return
+        w = self.width()
+        if w <= 10:
+            super().setText("")
+            return
+        fm = self.fontMetrics()
+        elided = fm.elidedText(self._full_text, Qt.TextElideMode.ElideRight, w)
+        super().setText(elided)
+
+
 class ToolRow(QFrame):
     toggled = Signal(str, bool)
     clicked = Signal(dict)
@@ -63,24 +99,24 @@ class ToolRow(QFrame):
         self._selected = False
 
         self.setObjectName("toolRow")
-        self.setFixedHeight(68)
+        self.setFixedHeight(58)
         self.setCursor(Qt.CursorShape.PointingHandCursor)
         self._apply_style()
 
         layout = QHBoxLayout(self)
-        layout.setContentsMargins(14, 0, 16, 0)
-        layout.setSpacing(10)
+        layout.setContentsMargins(10, 0, 10, 0)
+        layout.setSpacing(6)
 
         # Checkbox
         self.checkbox = QCheckBox()
-        self.checkbox.setFixedWidth(28)
+        self.checkbox.setFixedWidth(20)
         self.checkbox.setStyleSheet("""
             QCheckBox {
                 background: transparent;
             }
             QCheckBox::indicator {
-                width: 17px;
-                height: 17px;
+                width: 16px;
+                height: 16px;
                 border: 1px solid rgba(255, 255, 255, 0.18);
                 border-radius: 4px;
                 background-color: rgba(15, 23, 42, 0.6);
@@ -100,34 +136,32 @@ class ToolRow(QFrame):
         # Tool icon
         from udm.gui.icon_provider import get_tool_icon_pixmap
         icon_label = QLabel()
-        icon_label.setFixedSize(36, 36)
+        icon_label.setFixedSize(26, 26)
         icon_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         icon_label.setStyleSheet("background: transparent; border: none;")
 
-        pix = get_tool_icon_pixmap(tool, size=32)
+        pix = get_tool_icon_pixmap(tool, size=24)
         if pix and not pix.isNull():
             icon_label.setPixmap(pix)
         layout.addWidget(icon_label)
-        layout.addSpacing(2)
 
-        # Name and description column
+        # Name and description column (auto-elided so it never overflows or overlaps)
         name_col = QVBoxLayout()
-        name_col.setSpacing(2)
-        name_col.setContentsMargins(0, 12, 0, 12)
+        name_col.setSpacing(1)
+        name_col.setContentsMargins(0, 6, 0, 6)
 
         display_title = "C++" if self.key == "gpp" else tool.get("name", "")
-        self.name_label = QLabel(display_title)
+        self.name_label = ElidedLabel(display_title)
         self.name_label.setStyleSheet("color: #ffffff; font-size: 13.5px; font-weight: 600; background: transparent; border: none;")
         name_col.addWidget(self.name_label)
 
         desc_text = tool.get("description", "")
-        if len(desc_text) > 78:
-            desc_text = desc_text[:75] + "..."
-        self.desc_label = QLabel(desc_text)
-        self.desc_label.setStyleSheet("color: #94a3b8; font-size: 11.5px; background: transparent; border: none;")
+        self.desc_label = ElidedLabel(desc_text)
+        self.desc_label.setStyleSheet("color: #94a3b8; font-size: 11px; background: transparent; border: none;")
         name_col.addWidget(self.desc_label)
 
         name_widget = QWidget()
+        name_widget.setMinimumWidth(0)
         name_widget.setLayout(name_col)
         name_widget.setStyleSheet("background: transparent; border: none;")
         name_widget.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Preferred)
@@ -140,41 +174,55 @@ class ToolRow(QFrame):
         if version:
             version_text = version.split()[-1] if version.split() else "—"
         self.version_label = QLabel(version_text)
-        self.version_label.setFixedWidth(80)
+        self.version_label.setFixedWidth(72)
         self.version_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.version_label.setStyleSheet("""
             color: #64748b;
             font-family: "Cascadia Code", "Consolas", monospace;
-            font-size: 12px;
+            font-size: 10px;
             background: transparent;
             border: none;
         """)
         layout.addWidget(self.version_label)
-        layout.addSpacing(10)
 
-        # Category badge
+        # Category badge (compact labels to guarantee zero clipping)
         cat = tool.get("category", "Other")
-        # Map raw category to display
-        if cat == "DevOps & Tools":
-            cat_display = "DEVOPS TOOLS"
-        elif cat == "AI / Data Science":
+        if cat in ("DevOps & Tools", "DevOps Tools"):
+            cat_display = "DEVOPS"
+        elif cat in ("AI / Data Science", "Data Science"):
             cat_display = "DATA SCIENCE"
+        elif cat == "Package Managers":
+            cat_display = "PKG MANAGERS"
+        elif cat == "Mobile Development":
+            cat_display = "MOBILE DEV"
+        elif cat == "SDKs & Frameworks":
+            cat_display = "SDKS"
+        elif cat == "IDEs & Editors":
+            cat_display = "IDES & EDITORS"
         else:
             cat_display = cat.upper()
 
         cat_fg, cat_bg = CATEGORY_COLORS.get(cat, ("#94a3b8", "rgba(255, 255, 255, 0.08)"))
         self.cat_badge = QLabel(cat_display)
-        self.cat_badge.setFixedWidth(135)
+        self.cat_badge.setFixedWidth(98)
         self.cat_badge.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.cat_badge.setStyleSheet(f"""
             color: {cat_fg};
-            font-size: 11px;
+            font-size: 10px;
             font-weight: 700;
-            letter-spacing: 0.5px;
+            letter-spacing: 0.4px;
             background: transparent;
             border: none;
         """)
         layout.addWidget(self.cat_badge)
+
+        # Status badge (ALWAYS visible with fixed width so columns never shift)
+        self._is_installed = False
+        self.status_badge = QLabel("")
+        self.status_badge.setFixedWidth(66)
+        self.status_badge.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.status_badge.setStyleSheet("background: transparent; border: none;")
+        layout.addWidget(self.status_badge)
 
     def _apply_style(self):
         if self._selected:
@@ -210,6 +258,23 @@ class ToolRow(QFrame):
     def is_checked(self): return self.checkbox.isChecked()
     def set_checked(self, checked): self.checkbox.setChecked(checked)
 
+    def set_installed(self, installed: bool):
+        self._is_installed = bool(installed)
+        if self._is_installed:
+            self.status_badge.setText("INSTALLED")
+            self.status_badge.setStyleSheet("""
+                color: #34d399;
+                font-size: 9px;
+                font-weight: 700;
+                background-color: rgba(16, 185, 129, 0.14);
+                border: 1px solid rgba(16, 185, 129, 0.35);
+                border-radius: 5px;
+                padding: 2px 2px;
+            """)
+        else:
+            self.status_badge.setText("")
+            self.status_badge.setStyleSheet("background: transparent; border: none;")
+
     def matches_filter(self, query, category):
         if category != "All" and self.tool.get("category", "") != category:
             # Handle mapped categories
@@ -237,19 +302,19 @@ class ColumnHeader(QWidget):
 
     def __init__(self, parent=None):
         super().__init__(parent)
-        self.setFixedHeight(32)
+        self.setFixedHeight(28)
         self.setStyleSheet("background: transparent; border: none;")
         layout = QHBoxLayout(self)
-        layout.setContentsMargins(14, 0, 16, 0)
-        layout.setSpacing(10)
+        layout.setContentsMargins(10, 0, 16, 0)
+        layout.setSpacing(6)
 
         self.select_all_cb = QCheckBox()
-        self.select_all_cb.setFixedWidth(28)
+        self.select_all_cb.setFixedWidth(20)
         self.select_all_cb.setStyleSheet("""
             QCheckBox { background: transparent; }
             QCheckBox::indicator {
-                width: 17px;
-                height: 17px;
+                width: 16px;
+                height: 16px;
                 border: 1px solid rgba(255, 255, 255, 0.18);
                 border-radius: 4px;
                 background-color: rgba(15, 23, 42, 0.6);
@@ -267,24 +332,35 @@ class ColumnHeader(QWidget):
         )
         layout.addWidget(self.select_all_cb)
 
-        hs = "color: #64748b; font-size: 11px; font-weight: 700; letter-spacing: 1px; background: transparent; border: none;"
+        # Icon spacer placeholder (matching 26px icon in ToolRow)
+        icon_spacer = QWidget()
+        icon_spacer.setFixedWidth(26)
+        icon_spacer.setStyleSheet("background: transparent; border: none;")
+        layout.addWidget(icon_spacer)
+
+        hs = "color: #64748b; font-size: 11px; font-weight: 700; letter-spacing: 0.8px; background: transparent; border: none;"
 
         name_header = QLabel("PACKAGE")
         name_header.setStyleSheet(hs)
         layout.addWidget(name_header, stretch=1)
 
         version_header = QLabel("VERSION")
-        version_header.setFixedWidth(80)
+        version_header.setFixedWidth(72)
         version_header.setAlignment(Qt.AlignmentFlag.AlignCenter)
         version_header.setStyleSheet(hs)
         layout.addWidget(version_header)
-        layout.addSpacing(10)
 
         cat_header = QLabel("CATEGORY")
-        cat_header.setFixedWidth(135)
+        cat_header.setFixedWidth(98)
         cat_header.setAlignment(Qt.AlignmentFlag.AlignCenter)
         cat_header.setStyleSheet(hs)
         layout.addWidget(cat_header)
+
+        status_header = QLabel("STATUS")
+        status_header.setFixedWidth(66)
+        status_header.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        status_header.setStyleSheet(hs)
+        layout.addWidget(status_header)
 
 
 class ToolTable(QWidget):
@@ -295,7 +371,7 @@ class ToolTable(QWidget):
         super().__init__(parent)
         self._rows = []
         outer_layout = QVBoxLayout(self)
-        outer_layout.setContentsMargins(20, 4, 20, 0)
+        outer_layout.setContentsMargins(12, 2, 12, 0)
         outer_layout.setSpacing(4)
 
         self.column_header = ColumnHeader()
@@ -303,17 +379,36 @@ class ToolTable(QWidget):
         outer_layout.addWidget(self.column_header)
 
         self.scroll_area = QScrollArea()
-        self.scroll_area.setFixedHeight(380)
+        self.scroll_area.setMinimumHeight(180)
+        self.scroll_area.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
         self.scroll_area.setWidgetResizable(True)
         self.scroll_area.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
         self.scroll_area.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAsNeeded)
-        self.scroll_area.setStyleSheet("border: none; background: transparent;")
+        self.scroll_area.setStyleSheet("""
+            QScrollArea { border: none; background: transparent; }
+            QScrollBar:vertical {
+                width: 6px;
+                background: transparent;
+                margin: 0px;
+            }
+            QScrollBar::handle:vertical {
+                background: rgba(255, 255, 255, 0.15);
+                border-radius: 3px;
+                min-height: 20px;
+            }
+            QScrollBar::handle:vertical:hover {
+                background: rgba(255, 255, 255, 0.28);
+            }
+            QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical {
+                height: 0px;
+            }
+        """)
 
         self.list_widget = QWidget()
         self.list_widget.setStyleSheet("background: transparent;")
         self.list_layout = QVBoxLayout(self.list_widget)
         self.list_layout.setContentsMargins(0, 0, 0, 0)
-        self.list_layout.setSpacing(8)
+        self.list_layout.setSpacing(6)
 
         self._populate(tools)
         self.list_layout.addStretch()
@@ -375,3 +470,9 @@ class ToolTable(QWidget):
         self._populate(tools)
         self.list_layout.addStretch()
         self.selection_changed.emit(0)
+
+    def update_tool_installed(self, key: str, is_installed: bool):
+        for row in self._rows:
+            if row.key == key:
+                row.set_installed(is_installed)
+                break

@@ -1334,6 +1334,42 @@
     "path_required": true
   },
   {
+    "key": "oracle_db_xe",
+    "name": "Oracle Database 21c XE",
+    "description": "Free Oracle Database Express Edition",
+    "category": "Databases",
+    "detect_cmd": "sqlplus -v",
+    "install_command_windows": "__oracle_custom__",
+    "install_command_linux": "__oracle_custom__",
+    "install_command_mac": "",
+    "path_dirs_windows": [
+      "C:\\app\\oracle\\product\\21c\\dbhomeXE\\bin"
+    ],
+    "path_dirs_linux": [
+      "/opt/oracle/product/21c/dbhomeXE/bin"
+    ],
+    "path_required": true,
+    "oracle_linked": true
+  },
+  {
+    "key": "oracle_sql_developer",
+    "name": "Oracle SQL Developer",
+    "description": "Free IDE for Oracle Database development",
+    "category": "Databases",
+    "detect_cmd": "sqldeveloper -version",
+    "install_command_windows": "__oracle_custom__",
+    "install_command_linux": "__oracle_custom__",
+    "install_command_mac": "",
+    "path_dirs_windows": [
+      "C:\\sqldeveloper"
+    ],
+    "path_dirs_linux": [
+      "/opt/sqldeveloper"
+    ],
+    "path_required": true,
+    "oracle_linked": true
+  },
+  {
     "key": "solidity",
     "name": "Solidity (solc)",
     "description": "Smart-contract language for Ethereum",

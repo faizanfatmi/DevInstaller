@@ -51,8 +51,8 @@ class SidebarRow(QWidget):
         self.setCursor(Qt.CursorShape.PointingHandCursor)
 
         layout = QHBoxLayout(self)
-        layout.setContentsMargins(10, 0, 10, 0)
-        layout.setSpacing(10)
+        layout.setContentsMargins(8, 0, 8, 0)
+        layout.setSpacing(8)
 
         self.icon_lbl = QLabel()
         self.icon_lbl.setFixedSize(18, 18)
@@ -123,7 +123,7 @@ class Sidebar(QWidget):
 
     def __init__(self, categories: list[str], tool_counts: dict[str, int], parent=None):
         super().__init__(parent)
-        self.setFixedWidth(220)
+        self.setFixedWidth(190)
         self.setStyleSheet(f"""
             background-color: {BG_SIDEBAR};
             border-right: 1px solid {BORDER};
@@ -133,7 +133,7 @@ class Sidebar(QWidget):
         self._active_category = "All"
 
         layout = QVBoxLayout(self)
-        layout.setContentsMargins(12, 14, 12, 14)
+        layout.setContentsMargins(10, 12, 10, 12)
         layout.setSpacing(0)
 
         # ── Home navigation button ──

@@ -41,6 +41,8 @@ class WorkerSignals(QObject):
     progress = Signal(str, str, int)
     log_message = Signal(str)
     finished = Signal(dict)
+    uninstall_finished = Signal(dict, bool)
+    tool_detected = Signal(str, bool)
 
 
 class MainWindow(QMainWindow):
@@ -56,10 +58,13 @@ class MainWindow(QMainWindow):
 
         self._installing = False
         self._version_worker = None
+        self._installed_cache: dict[str, bool] = {}
         self._signals = WorkerSignals()
         self._signals.progress.connect(self._on_progress)
         self._signals.log_message.connect(self._on_log)
         self._signals.finished.connect(self._on_install_finished)
+        self._signals.uninstall_finished.connect(self._on_uninstall_finished)
+        self._signals.tool_detected.connect(self._on_tool_detected)
 
         self._all_tools = load_tools()
         self._categories = get_categories(self._all_tools)
@@ -78,6 +83,7 @@ class MainWindow(QMainWindow):
             self.detail_panel.set_tool(self._all_tools[0])
 
         # Non-blocking automatic check for updates and package manager after startup
+        QTimer.singleShot(400, self._initial_detect)
         QTimer.singleShot(600, self._check_package_manager)
         QTimer.singleShot(1200, self._check_for_updates)
 
@@ -182,6 +188,7 @@ class MainWindow(QMainWindow):
         self.tool_table.selection_changed.connect(self._on_selection_changed)
         self.tool_table.tool_selected.connect(self._on_tool_selected)
         self.detail_panel.install_requested.connect(self._on_detail_install)
+        self.detail_panel.uninstall_requested.connect(self._on_detail_uninstall)
 
     def _setup_callbacks(self):
         set_progress_callback(
@@ -198,19 +205,52 @@ class MainWindow(QMainWindow):
         category = self.search_bar.selected_category()
         self.tool_table.apply_filter(query, category)
 
+    def _initial_detect(self):
+        """Perform background detection for high-priority tools (Oracle, initial tool)."""
+        def detect_bg():
+            from udm.installer.engine import detect_tool
+            priority_keys = {"oracle_db_xe", "oracle_sql_developer"}
+            if self._all_tools:
+                priority_keys.add(self._all_tools[0].get("key", ""))
+            for tool in self._all_tools:
+                k = tool.get("key", "")
+                if k in priority_keys:
+                    present = detect_tool(tool)
+                    self._signals.tool_detected.emit(k, present)
+
+        threading.Thread(target=detect_bg, daemon=True).start()
+
+    @Slot(str, bool)
+    def _on_tool_detected(self, key: str, is_installed: bool):
+        """Handle background detection completion for a tool."""
+        self._installed_cache[key] = is_installed
+        self.tool_table.update_tool_installed(key, is_installed)
+        if self.detail_panel._current_tool and self.detail_panel._current_tool.get("key") == key:
+            self.detail_panel.set_installed_state(is_installed)
+
     def _on_selection_changed(self, count: int):
         if count > 1:
             self.detail_panel.install_btn.setText(f"⬇  Install Selected ({count})")
+            self.detail_panel.uninstall_btn.setVisible(False)
         elif count == 1:
             sel = self.tool_table.selected_tools()
             if sel:
-                self.detail_panel.set_tool(sel[0])
+                self._on_tool_selected(sel[0])
         elif self.detail_panel._current_tool:
-            self.detail_panel.install_btn.setText(f"⬇  Install {self.detail_panel._current_tool.get('name', '')}")
+            self._on_tool_selected(self.detail_panel._current_tool)
 
     def _on_tool_selected(self, tool: dict):
-        """Handle tool row click — update the detail panel."""
-        self.detail_panel.set_tool(tool)
+        """Handle tool row click — update the detail panel and check installed status."""
+        key = tool.get("key", "")
+        cached = self._installed_cache.get(key)
+        self.detail_panel.set_tool(tool, is_installed=cached)
+
+        if cached is None:
+            def check():
+                from udm.installer.engine import detect_tool
+                present = detect_tool(tool)
+                self._signals.tool_detected.emit(key, present)
+            threading.Thread(target=check, daemon=True).start()
 
     def _on_detail_install(self, tool: dict):
         """Handle install button click from the detail panel."""
@@ -433,6 +473,13 @@ class MainWindow(QMainWindow):
         else:
             self.status_bar.set_status_text("All done — happy coding! 🎉")
 
+        for k, v in results.items():
+            if v in ("installed", "already_installed"):
+                self._installed_cache[k] = True
+                self.tool_table.update_tool_installed(k, True)
+                if self.detail_panel._current_tool and self.detail_panel._current_tool.get("key") == k:
+                    self.detail_panel.set_installed_state(True)
+
         from udm.gui.completion_dialog import CompletionDialog
 
         dialog = CompletionDialog(
@@ -443,6 +490,115 @@ class MainWindow(QMainWindow):
             parent=self,
         )
         dialog.exec()
+
+    def _on_detail_uninstall(self, tool: dict):
+        """Handle uninstall button click from the detail panel."""
+        if self._installing:
+            QMessageBox.information(self, "Busy", "An installation or uninstallation is already in progress.")
+            return
+
+        key = tool.get("key", "")
+        name = "C++" if key == "gpp" else tool.get("name", "Unknown")
+
+        if key == "oracle_db_xe":
+            msg = QMessageBox(self)
+            msg.setWindowTitle("Confirm Complete Wipeout — Oracle Database 21c XE")
+            msg.setIcon(QMessageBox.Icon.Warning)
+            msg.setText(
+                "<h3>Confirm Oracle Database XE Wipeout</h3>"
+                "Are you sure you want to <b>completely uninstall and wipe out</b> Oracle Database 21c XE?<br><br>"
+                "<b>This will permanently:</b><br>"
+                "• Stop and remove all Oracle Windows services<br>"
+                "• Completely delete Oracle Home and database files (<code>C:\\app\\oracle</code>)<br>"
+                "• Delete all Oracle registry keys and configuration<br>"
+                "• Clean Oracle from the system PATH<br><br>"
+                "<i>This allows you to perform a 100% clean, fresh installation.</i>"
+            )
+            wipe_btn = msg.addButton("🗑️ Wipe Out & Uninstall", QMessageBox.ButtonRole.AcceptRole)
+            cancel_btn = msg.addButton("Cancel", QMessageBox.ButtonRole.RejectRole)
+            msg.setDefaultButton(cancel_btn)
+            msg.exec()
+            if msg.clickedButton() != wipe_btn:
+                return
+
+        elif key == "oracle_sql_developer":
+            msg = QMessageBox(self)
+            msg.setWindowTitle("Confirm Uninstall — Oracle SQL Developer")
+            msg.setIcon(QMessageBox.Icon.Warning)
+            msg.setText(
+                "<h3>Confirm SQL Developer Uninstall</h3>"
+                "Are you sure you want to completely remove <b>Oracle SQL Developer</b>?<br><br>"
+                "• Deletes <code>C:\\sqldeveloper</code><br>"
+                "• Cleans desktop & Start Menu shortcuts<br>"
+                "• Cleans system PATH"
+            )
+            uninst_btn = msg.addButton("🗑️ Uninstall", QMessageBox.ButtonRole.AcceptRole)
+            cancel_btn = msg.addButton("Cancel", QMessageBox.ButtonRole.RejectRole)
+            msg.setDefaultButton(cancel_btn)
+            msg.exec()
+            if msg.clickedButton() != uninst_btn:
+                return
+
+        else:
+            reply = QMessageBox.question(
+                self,
+                f"Confirm Uninstall — {name}",
+                f"Are you sure you want to uninstall {name} from your system?",
+                QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+                QMessageBox.StandardButton.No,
+            )
+            if reply != QMessageBox.StandardButton.Yes:
+                return
+
+        self._installing = True
+        self.status_bar.set_progress(15)
+        self.status_bar.set_status_text(f"Uninstalling {name}…")
+        self.log_panel.append_log("══════════════════════════════════════════════════════════════")
+        self.log_panel.append_log(f"Starting uninstallation / wipeout for {name}…")
+        self.log_panel.append_log("══════════════════════════════════════════════════════════════")
+
+        def worker():
+            try:
+                from udm.installer.engine import uninstall_tool
+                success = uninstall_tool(tool)
+            except Exception as ex:
+                logger.exception(f"Unhandled error during uninstallation of {name}")
+                self.log_panel.append_log(f"✗ Uninstall error: {ex}")
+                success = False
+            finally:
+                self._installing = False
+                self._signals.uninstall_finished.emit(tool, success)
+
+        threading.Thread(target=worker, daemon=True).start()
+
+    @Slot(dict, bool)
+    def _on_uninstall_finished(self, tool: dict, success: bool):
+        self.status_bar.set_progress(100)
+        key = tool.get("key", "")
+        name = "C++" if key == "gpp" else tool.get("name", "Unknown")
+
+        if success:
+            self.status_bar.set_status_text(f"{name} uninstalled successfully ✓")
+            self.log_panel.append_log(f"✓ {name} has been completely uninstalled and wiped out.")
+            self._installed_cache[key] = False
+            self.tool_table.update_tool_installed(key, False)
+            if self.detail_panel._current_tool and self.detail_panel._current_tool.get("key") == key:
+                self.detail_panel.set_installed_state(False)
+
+            QMessageBox.information(
+                self,
+                "Uninstall Complete",
+                f"<b>{name}</b> has been completely uninstalled and wiped out from the system.<br><br>"
+                "You can now do a fresh installation whenever you want.",
+            )
+        else:
+            self.status_bar.set_status_text(f"Uninstall failed for {name}")
+            self.log_panel.append_log(f"✗ Could not completely uninstall {name}. See log for details.")
+            QMessageBox.warning(
+                self,
+                "Uninstall Incomplete",
+                f"Could not completely remove {name}. Please check the logs in the terminal tab.",
+            )
 
     def closeEvent(self, event):
         if self._installing:

@@ -31,7 +31,7 @@ class ChipBar(QWidget):
         self.setStyleSheet("background:transparent;")
         self.setVisible(False)
         self._layout = QHBoxLayout(self)
-        self._layout.setContentsMargins(24, 0, 24, 4)
+        self._layout.setContentsMargins(12, 0, 12, 4)
         self._layout.setSpacing(6)
         self._stack_label = QLabel()
         self._stack_label.setStyleSheet("color:#60a5fa;font-size:11px;font-weight:600;"
@@ -88,7 +88,7 @@ class SearchBar(QWidget):
         top_row = QWidget()
         top_row.setStyleSheet("background:transparent;")
         layout = QHBoxLayout(top_row)
-        layout.setContentsMargins(24, 14, 24, 8)
+        layout.setContentsMargins(12, 12, 12, 6)
         layout.setSpacing(10)
 
         # AI Stack toggle button
