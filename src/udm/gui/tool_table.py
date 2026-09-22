@@ -14,20 +14,20 @@ from udm.gui.theme import (
 
 ICONS_DIR = Path(__file__).resolve().parent.parent / "assets" / "icons"
 
-# Category color mapping — vibrant filled pill badges matching mockup
+# Category color mapping — DevForge Dark palette
 CATEGORY_COLORS = {
-    "Languages": ("#818cf8", "rgba(99, 102, 241, 0.22)"),
-    "Package Managers": ("#fb923c", "rgba(234, 88, 12, 0.20)"),
-    "Compilers": ("#34d399", "rgba(16, 185, 129, 0.20)"),
-    "Databases": ("#22d3ee", "rgba(34, 211, 238, 0.20)"),
-    "DevOps Tools": ("#38bdf8", "rgba(56, 189, 248, 0.20)"),
-    "DevOps & Tools": ("#38bdf8", "rgba(56, 189, 248, 0.20)"),
-    "IDEs & Editors": ("#34d399", "rgba(52, 211, 153, 0.20)"),
-    "Cloud CLIs": ("#93c5fd", "rgba(147, 197, 253, 0.20)"),
-    "Mobile Development": ("#f87171", "rgba(248, 113, 113, 0.20)"),
-    "Data Science": ("#f472b6", "rgba(244, 114, 182, 0.20)"),
-    "AI / Data Science": ("#f472b6", "rgba(244, 114, 182, 0.20)"),
-    "SDKs & Frameworks": ("#c084fc", "rgba(192, 132, 252, 0.20)"),
+    "Languages": ("#a2c9ff", "rgba(162, 201, 255, 0.15)"),
+    "Package Managers": ("#becab9", "rgba(190, 202, 185, 0.15)"),
+    "Compilers": ("#6fdd78", "rgba(111, 221, 120, 0.15)"),
+    "Databases": ("#a2c9ff", "rgba(162, 201, 255, 0.15)"),
+    "DevOps Tools": ("#becab9", "rgba(190, 202, 185, 0.15)"),
+    "DevOps & Tools": ("#becab9", "rgba(190, 202, 185, 0.15)"),
+    "IDEs & Editors": ("#6fdd78", "rgba(111, 221, 120, 0.15)"),
+    "Cloud CLIs": ("#a2c9ff", "rgba(162, 201, 255, 0.15)"),
+    "Mobile Development": ("#d5bbff", "rgba(213, 187, 255, 0.15)"),
+    "Data Science": ("#d5bbff", "rgba(213, 187, 255, 0.15)"),
+    "AI / Data Science": ("#d5bbff", "rgba(213, 187, 255, 0.15)"),
+    "SDKs & Frameworks": ("#d5bbff", "rgba(213, 187, 255, 0.15)"),
 }
 
 TOOL_ICONS_MAP = {
@@ -36,19 +36,6 @@ TOOL_ICONS_MAP = {
     "pip": "pip.png",
     "gcc": "gcc.png",
     "gpp": "cpp.png",
-}
-
-TOOL_EMOJI_FALLBACK = {
-    "node": "🟢",
-    "rust": "🦀",
-    "go": "🔵",
-    "java": "☕",
-    "ruby": "💎",
-    "php": "🐘",
-    "clang": "⚡",
-    "docker": "🐳",
-    "git": "🔀",
-    "vscode": "💙",
 }
 
 
@@ -117,16 +104,16 @@ class ToolRow(QFrame):
             QCheckBox::indicator {
                 width: 16px;
                 height: 16px;
-                border: 1px solid rgba(255, 255, 255, 0.18);
+                border: 1.5px solid #484F58;
                 border-radius: 4px;
-                background-color: rgba(15, 23, 42, 0.6);
+                background-color: transparent;
             }
             QCheckBox::indicator:hover {
-                border: 1px solid #3b82f6;
+                border: 1.5px solid #6fdd78;
             }
             QCheckBox::indicator:checked {
-                background-color: #2563eb;
-                border: 1px solid #3b82f6;
+                background-color: #6fdd78;
+                border: 1.5px solid #6fdd78;
                 image: url("e:/faizan/Faizan/Github/DevInstaller/src/udm/assets/icons/check.png");
             }
         """)
@@ -152,12 +139,12 @@ class ToolRow(QFrame):
 
         display_title = "C++" if self.key == "gpp" else tool.get("name", "")
         self.name_label = ElidedLabel(display_title)
-        self.name_label.setStyleSheet("color: #ffffff; font-size: 13.5px; font-weight: 600; background: transparent; border: none;")
+        self.name_label.setStyleSheet("color: #e1e2eb; font-size: 13.5px; font-weight: 600; background: transparent; border: none;")
         name_col.addWidget(self.name_label)
 
         desc_text = tool.get("description", "")
         self.desc_label = ElidedLabel(desc_text)
-        self.desc_label.setStyleSheet("color: #94a3b8; font-size: 11px; background: transparent; border: none;")
+        self.desc_label.setStyleSheet("color: #becab9; font-size: 11px; background: transparent; border: none;")
         name_col.addWidget(self.desc_label)
 
         name_widget = QWidget()
@@ -177,7 +164,7 @@ class ToolRow(QFrame):
         self.version_label.setFixedWidth(72)
         self.version_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.version_label.setStyleSheet("""
-            color: #64748b;
+            color: #889484;
             font-family: "Cascadia Code", "Consolas", monospace;
             font-size: 10px;
             background: transparent;
@@ -202,7 +189,7 @@ class ToolRow(QFrame):
         else:
             cat_display = cat.upper()
 
-        cat_fg, cat_bg = CATEGORY_COLORS.get(cat, ("#94a3b8", "rgba(255, 255, 255, 0.08)"))
+        cat_fg, cat_bg = CATEGORY_COLORS.get(cat, ("#becab9", "rgba(255, 255, 255, 0.08)"))
         self.cat_badge = QLabel(cat_display)
         self.cat_badge.setFixedWidth(98)
         self.cat_badge.setAlignment(Qt.AlignmentFlag.AlignCenter)
@@ -228,8 +215,8 @@ class ToolRow(QFrame):
         if self._selected:
             self.setStyleSheet("""
                 QFrame#toolRow {
-                    background-color: rgba(30, 41, 59, 0.85);
-                    border: 1px solid #3b82f6;
+                    background-color: #1d2026;
+                    border: 1px solid #6fdd78;
                     border-radius: 10px;
                 }
                 QLabel { border: none; background: transparent; }
@@ -238,13 +225,13 @@ class ToolRow(QFrame):
         else:
             self.setStyleSheet("""
                 QFrame#toolRow {
-                    background-color: rgba(15, 23, 42, 0.7);
-                    border: 1px solid rgba(255, 255, 255, 0.07);
+                    background-color: #191c22;
+                    border: 1px solid #3e4a3d;
                     border-radius: 10px;
                 }
                 QFrame#toolRow:hover {
-                    background-color: rgba(30, 41, 59, 0.75);
-                    border: 1px solid rgba(59, 130, 246, 0.35);
+                    background-color: #272a31;
+                    border: 1px solid rgba(111, 221, 120, 0.35);
                 }
                 QLabel { border: none; background: transparent; }
                 QWidget { border: none; background: transparent; }
@@ -263,11 +250,11 @@ class ToolRow(QFrame):
         if self._is_installed:
             self.status_badge.setText("INSTALLED")
             self.status_badge.setStyleSheet("""
-                color: #34d399;
+                color: #6fdd78;
                 font-size: 9px;
                 font-weight: 700;
-                background-color: rgba(16, 185, 129, 0.14);
-                border: 1px solid rgba(16, 185, 129, 0.35);
+                background-color: rgba(111, 221, 120, 0.15);
+                border: 1px solid rgba(111, 221, 120, 0.35);
                 border-radius: 5px;
                 padding: 2px 2px;
             """)
@@ -288,7 +275,22 @@ class ToolRow(QFrame):
             name = self.tool.get("name", "").lower()
             desc = self.tool.get("description", "").lower()
             key = self.key.lower()
-            if query not in name and query not in desc and query not in key: return False
+            if query in name or query in desc or query in key:
+                return True
+            # Multi-word match: each word in query appears in tool's text
+            terms = query.split()
+            combined = f"{key} {name} {desc}"
+            if terms and all(t in combined for t in terms):
+                return True
+            # Normalized match (ignoring spaces / hyphens)
+            norm_q = query.replace(" ", "").replace("-", "")
+            if norm_q and (norm_q in combined.replace(" ", "").replace("-", "")):
+                return True
+            # Check TECH_ALIASES
+            from udm.stack_parser import TECH_ALIASES
+            if TECH_ALIASES.get(query) == key or TECH_ALIASES.get(norm_q) == key:
+                return True
+            return False
         return True
 
     def mousePressEvent(self, event):
@@ -315,16 +317,17 @@ class ColumnHeader(QWidget):
             QCheckBox::indicator {
                 width: 16px;
                 height: 16px;
-                border: 1px solid rgba(255, 255, 255, 0.18);
+                border: 1.5px solid #484F58;
                 border-radius: 4px;
-                background-color: rgba(15, 23, 42, 0.6);
+                background-color: transparent;
             }
             QCheckBox::indicator:hover {
-                border: 1px solid #3b82f6;
+                border: 1.5px solid #6fdd78;
             }
             QCheckBox::indicator:checked {
-                background-color: #2563eb;
-                border: 1px solid #3b82f6;
+                background-color: #6fdd78;
+                border: 1.5px solid #6fdd78;
+                image: url("e:/faizan/Faizan/Github/DevInstaller/src/udm/assets/icons/check.png");
             }
         """)
         self.select_all_cb.stateChanged.connect(
@@ -338,7 +341,7 @@ class ColumnHeader(QWidget):
         icon_spacer.setStyleSheet("background: transparent; border: none;")
         layout.addWidget(icon_spacer)
 
-        hs = "color: #64748b; font-size: 11px; font-weight: 700; letter-spacing: 0.8px; background: transparent; border: none;"
+        hs = "color: #889484; font-size: 11px; font-weight: 700; letter-spacing: 0.8px; background: transparent; border: none;"
 
         name_header = QLabel("PACKAGE")
         name_header.setStyleSheet(hs)
@@ -392,12 +395,12 @@ class ToolTable(QWidget):
                 margin: 0px;
             }
             QScrollBar::handle:vertical {
-                background: rgba(255, 255, 255, 0.15);
+                background: #3e4a3d;
                 border-radius: 3px;
                 min-height: 20px;
             }
             QScrollBar::handle:vertical:hover {
-                background: rgba(255, 255, 255, 0.28);
+                background: #889484;
             }
             QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical {
                 height: 0px;

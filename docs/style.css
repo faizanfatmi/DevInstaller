@@ -1,40 +1,40 @@
 /* ================================================================
    DevInstaller — Download Page
-   Aesthetic: Industrial Terminal / Dark Obsidian + Electric Mint
+   Aesthetic: DevForge Dark / Obsidian & Charcoal + Emerald
    ================================================================ */
 
 /* ---------- Design Tokens ---------- */
 :root {
   /* Surfaces */
-  --bg-root: #06060c;
-  --bg-surface: #0c0c16;
-  --bg-elevated: #111120;
-  --bg-card: rgba(15, 15, 30, 0.65);
-  --bg-card-hover: rgba(20, 20, 40, 0.85);
+  --bg-root: #101319;
+  --bg-surface: #0b0e14;
+  --bg-elevated: #191c22;
+  --bg-card: rgba(25, 28, 34, 0.75);
+  --bg-card-hover: rgba(39, 42, 49, 0.85);
 
   /* Accent */
-  --accent: #00e5a0;
-  --accent-glow: rgba(0, 229, 160, 0.25);
-  --accent-dim: #00b37d;
-  --accent-subtle: rgba(0, 229, 160, 0.08);
+  --accent: #6fdd78;
+  --accent-glow: rgba(111, 221, 120, 0.25);
+  --accent-dim: #34a547;
+  --accent-subtle: rgba(111, 221, 120, 0.08);
 
   /* Secondary */
-  --amber: #f0b429;
-  --amber-dim: rgba(240, 180, 41, 0.15);
+  --amber: #fbbf24;
+  --amber-dim: rgba(251, 191, 36, 0.15);
 
   /* Text */
-  --text-primary: #e8e6e3;
-  --text-secondary: #8a8a9a;
-  --text-muted: #55556a;
-  --text-on-accent: #06060c;
+  --text-primary: #e1e2eb;
+  --text-secondary: #becab9;
+  --text-muted: #889484;
+  --text-on-accent: #00390e;
 
   /* Borders */
-  --border: rgba(255, 255, 255, 0.06);
-  --border-accent: rgba(0, 229, 160, 0.2);
+  --border: #3e4a3d;
+  --border-accent: rgba(111, 221, 120, 0.3);
 
   /* Shadows */
   --shadow-lg: 0 24px 64px rgba(0, 0, 0, 0.5), 0 8px 24px rgba(0, 0, 0, 0.3);
-  --shadow-glow: 0 0 40px rgba(0, 229, 160, 0.15), 0 0 80px rgba(0, 229, 160, 0.05);
+  --shadow-glow: 0 0 40px rgba(111, 221, 120, 0.15), 0 0 80px rgba(111, 221, 120, 0.05);
 
   /* Typography */
   --font-display: 'Sora', system-ui, sans-serif;

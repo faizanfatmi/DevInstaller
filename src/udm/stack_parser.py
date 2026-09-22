@@ -166,8 +166,9 @@ STACK_PRESETS: dict[str, list[str]] = {
     "livebook":  ["elixir", "erlang", "git", "vscode"],
 
     # ── Data Science / AI / ML ──────────────────────────────────────
-    "datascience":       ["python", "pip", "jupyter", "anaconda", "git", "vscode"],
-    "data-science":      ["python", "pip", "jupyter", "anaconda", "git", "vscode"],
+    "datascience":       ["python", "pip", "jupyter", "anaconda", "r", "rstudio", "git", "vscode"],
+    "data-science":      ["python", "pip", "jupyter", "anaconda", "r", "rstudio", "git", "vscode"],
+    "data science":      ["python", "pip", "jupyter", "anaconda", "r", "rstudio", "git", "vscode"],
     "machinelearning":   ["python", "pip", "jupyter", "tensorflow", "pytorch", "git", "vscode"],
     "machine-learning":  ["python", "pip", "jupyter", "tensorflow", "pytorch", "git", "vscode"],
     "ml":                ["python", "pip", "jupyter", "tensorflow", "pytorch", "git", "vscode"],
@@ -179,6 +180,16 @@ STACK_PRESETS: dict[str, list[str]] = {
     "computer-vision":   ["python", "pip", "jupyter", "pytorch", "cuda", "git", "vscode"],
     "llm":               ["python", "pip", "jupyter", "pytorch", "cuda", "git", "vscode"],
     "genai":             ["python", "pip", "jupyter", "pytorch", "cuda", "git", "vscode"],
+    "rstats":            ["r", "rstudio", "git"],
+    "statistics":        ["r", "rstudio", "git"],
+    "r":                 ["r", "rstudio", "git"],
+    "rlang":             ["r", "rstudio", "git"],
+    "r-lang":            ["r", "rstudio", "git"],
+    "r-desktop":         ["rstudio", "r", "git"],
+    "rdesktop":          ["rstudio", "r", "git"],
+    "r desktop":         ["rstudio", "r", "git"],
+    "rstudio":           ["rstudio", "r", "git"],
+    "r-studio":          ["rstudio", "r", "git"],
 
     # ── DevOps / Infra ──────────────────────────────────────────────
     "devops":           ["docker", "kubernetes", "terraform", "ansible", "git", "vscode"],
@@ -624,6 +635,7 @@ TECH_ALIASES: dict[str, str] = {
     "vscode": "vscode", "code": "vscode", "vs-code": "vscode",
     "sublime": "sublime", "sublimetext": "sublime",
     "neovim": "neovim", "nvim": "neovim", "vim": "neovim",
+    "rstudio": "rstudio", "r-studio": "rstudio", "rdesktop": "rstudio", "r-desktop": "rstudio", "r desktop": "rstudio", "rstudio desktop": "rstudio",
 
     # Other languages
     "perl": "perl",
@@ -727,11 +739,13 @@ def parse_prompt(prompt: str, available_tools: list[dict] | None = None) -> Pars
 
     collected_keys: list[str] = []
 
-    # Build n-grams for multi-word matching
-    all_ngrams: list[str] = list(meaningful)
+    # Build n-grams for multi-word matching (longer n-grams first)
+    all_ngrams: list[str] = []
     for i in range(len(meaningful) - 1):
-        all_ngrams.append(meaningful[i] + meaningful[i + 1])      # bigram no space
-        all_ngrams.append(meaningful[i] + "-" + meaningful[i + 1])  # with hyphen
+        all_ngrams.append(meaningful[i] + " " + meaningful[i + 1])    # with space
+        all_ngrams.append(meaningful[i] + "-" + meaningful[i + 1])    # with hyphen
+        all_ngrams.append(meaningful[i] + meaningful[i + 1])        # bigram no space
+    all_ngrams.extend(meaningful)
 
     # ── LAYER 1: Stack presets (highest priority) ───────────────────
     for ngram in all_ngrams:
@@ -748,7 +762,7 @@ def parse_prompt(prompt: str, available_tools: list[dict] | None = None) -> Pars
                 collected_keys.extend(PROBLEM_DOMAINS[ngram])
 
     # ── LAYER 3: Individual tech aliases ────────────────────────────
-    for token in meaningful:
+    for token in all_ngrams:
         if token in TECH_ALIASES:
             collected_keys.append(TECH_ALIASES[token])
 

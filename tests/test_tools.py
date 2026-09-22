@@ -39,3 +39,17 @@ def test_windows_commands_present():
 
     missing_windows = [t["key"] for t in tools if not t.get("install_command_windows")]
     assert len(missing_windows) == 0, f"Tools missing Windows install commands: {missing_windows}"
+
+
+def test_rstudio_entry():
+    path = ROOT / "tools.json"
+    with open(path, "r", encoding="utf-8") as f:
+        tools = json.load(f)
+
+    rstudio = next((t for t in tools if t.get("key") == "rstudio"), None)
+    assert rstudio is not None, "rstudio entry must exist in tools.json"
+    assert rstudio["name"] == "RStudio Desktop"
+    assert rstudio["category"] == "IDEs & Editors"
+    assert "Posit.RStudio" in rstudio.get("install_command_windows", "")
+    assert "rstudio" in rstudio.get("install_command_linux", "")
+    assert "rstudio" in rstudio.get("install_command_mac", "")

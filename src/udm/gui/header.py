@@ -1,8 +1,9 @@
 """Header bar — app branding, OS selector, and user avatar."""
 
-from PySide6.QtCore import Qt
-from PySide6.QtGui import QPixmap
-from PySide6.QtWidgets import QHBoxLayout, QLabel, QVBoxLayout, QWidget
+from pathlib import Path
+from PySide6.QtCore import QSize, Qt
+from PySide6.QtGui import QIcon, QPixmap
+from PySide6.QtWidgets import QHBoxLayout, QLabel, QPushButton, QVBoxLayout, QWidget
 
 from udm.config import resource_path
 from udm.constants import LOGO_FILENAME
@@ -17,6 +18,8 @@ from udm.gui.theme import (
 )
 from udm.gui.widgets import PillBadge
 from udm.platform import is_admin, os_label
+
+ICONS_DIR = Path(__file__).resolve().parent.parent / "assets" / "icons"
 
 
 class HeaderBar(QWidget):
@@ -65,11 +68,11 @@ class HeaderBar(QWidget):
             icon_label.setText("D")
             icon_label.setStyleSheet("""
                 QLabel {
-                    background-color: #3b82f6;
+                    background-color: #6fdd78;
                     border-radius: 8px;
                     font-size: 18px;
                     font-weight: 800;
-                    color: #ffffff;
+                    color: #00390e;
                 }
             """)
         brand_layout.addWidget(icon_label)
@@ -107,31 +110,36 @@ class HeaderBar(QWidget):
         from udm.platform import detect_os
         current_os = detect_os()
         if current_os == "Windows":
-            os_icon = "🪟"
             os_text = "Windows"
+            os_icon_file = "os_windows.png"
         elif current_os == "Darwin":
-            os_icon = "🍎"
             os_text = "macOS"
+            os_icon_file = "os_mac.png"
         else:
-            os_icon = "🐧"
             os_text = "Linux"
+            os_icon_file = "os_linux.png"
 
-        os_badge = QLabel(f"  {os_icon}  {os_text}  ▾")
+        os_badge = QPushButton(f"  {os_text}  ▾")
         os_badge.setCursor(Qt.CursorShape.PointingHandCursor)
         os_badge.setFixedHeight(32)
+        os_icon_path = ICONS_DIR / os_icon_file
+        if os_icon_path.exists():
+            os_badge.setIcon(QIcon(str(os_icon_path)))
+            os_badge.setIconSize(QSize(15, 15))
         os_badge.setStyleSheet(f"""
-            QLabel {{
-                background-color: rgba(255, 255, 255, 0.05);
+            QPushButton {{
+                background-color: #191c22;
                 color: {FG};
                 border: 1px solid {BORDER};
                 border-radius: 6px;
                 padding: 4px 12px;
                 font-size: 12px;
                 font-weight: 600;
+                text-align: center;
             }}
-            QLabel:hover {{
-                background-color: rgba(255, 255, 255, 0.09);
-                border-color: rgba(255, 255, 255, 0.2);
+            QPushButton:hover {{
+                background-color: #272a31;
+                border-color: #889484;
             }}
         """)
         layout.addWidget(os_badge)
@@ -159,8 +167,8 @@ class HeaderBar(QWidget):
         avatar.setStyleSheet("""
             QLabel {
                 background: qlineargradient(x1:0, y1:0, x2:1, y2:1,
-                    stop:0 #3b82f6, stop:1 #8b5cf6);
-                color: #ffffff;
+                    stop:0 #6fdd78, stop:1 #34a547);
+                color: #00390e;
                 border-radius: 17px;
                 font-size: 14px;
                 font-weight: 700;

@@ -12,12 +12,12 @@ from udm.gui.theme import (
     SIDEBAR_ITEM_ACTIVE, SIDEBAR_ITEM_HOVER,
 )
 
-# ── Blue glossy button CSS ───────────────────────────────────────────
+# ── Emerald primary button CSS ───────────────────────────────────────
 _BLUE_BTN = """
     QPushButton {
         background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
-            stop:0 #60a5fa, stop:0.5 #3b82f6, stop:1 #2563eb);
-        color: #ffffff;
+            stop:0 #8bfb91, stop:0.5 #6fdd78, stop:1 #34a547);
+        color: #00390e;
         border: 1px solid rgba(255, 255, 255, 0.15);
         border-radius: 10px;
         padding: 11px 24px;
@@ -27,25 +27,25 @@ _BLUE_BTN = """
     }
     QPushButton:hover {
         background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
-            stop:0 #93bbfd, stop:0.5 #60a5fa, stop:1 #3b82f6);
+            stop:0 #a6fca9, stop:0.5 #8bfb91, stop:1 #6fdd78);
         border: 1px solid rgba(255, 255, 255, 0.25);
     }
     QPushButton:pressed {
         background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
-            stop:0 #3b82f6, stop:0.5 #2563eb, stop:1 #1d4ed8);
+            stop:0 #6fdd78, stop:0.5 #34a547, stop:1 #238233);
     }
     QPushButton:disabled {
-        background: #162035;
-        color: #475569;
-        border: 1px solid #1e2d4a;
+        background: #191c22;
+        color: #889484;
+        border: 1px solid #3e4a3d;
     }
 """
 
-# ── Red glossy button CSS (same design, red palette) ────────────────
+# ── Red danger button CSS (DevForge red palette) ────────────────────
 _RED_BTN = """
     QPushButton {
         background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
-            stop:0 #f87171, stop:0.5 #ef4444, stop:1 #b91c1c);
+            stop:0 #ffb4ab, stop:0.5 #ba1a1a, stop:1 #93000a);
         color: #ffffff;
         border: 1px solid rgba(255, 255, 255, 0.15);
         border-radius: 10px;
@@ -56,26 +56,26 @@ _RED_BTN = """
     }
     QPushButton:hover {
         background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
-            stop:0 #fca5a5, stop:0.5 #f87171, stop:1 #ef4444);
+            stop:0 #ffdad6, stop:0.5 #ffb4ab, stop:1 #ba1a1a);
         border: 1px solid rgba(255, 255, 255, 0.25);
     }
     QPushButton:pressed {
         background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
-            stop:0 #ef4444, stop:0.5 #b91c1c, stop:1 #991b1b);
+            stop:0 #ba1a1a, stop:0.5 #93000a, stop:1 #690005);
     }
     QPushButton:disabled {
-        background: #162035;
-        color: #475569;
-        border: 1px solid #1e2d4a;
+        background: #191c22;
+        color: #889484;
+        border: 1px solid #3e4a3d;
     }
 """
 
 # ── Secondary / ghost button ────────────────────────────────────────
 _SECONDARY_BTN = """
     QPushButton {
-        background-color: rgba(255, 255, 255, 0.05);
-        color: #94a3b8;
-        border: 1px solid #1e2d4a;
+        background-color: #191c22;
+        color: #becab9;
+        border: 1px solid #3e4a3d;
         border-radius: 10px;
         padding: 11px 24px;
         font-size: 13px;
@@ -83,17 +83,17 @@ _SECONDARY_BTN = """
         letter-spacing: 0.3px;
     }
     QPushButton:hover {
-        background-color: rgba(255, 255, 255, 0.08);
-        color: #e2e8f0;
-        border-color: #2a3f5f;
+        background-color: #272a31;
+        color: #e1e2eb;
+        border-color: #889484;
     }
     QPushButton:pressed {
-        background-color: rgba(255, 255, 255, 0.03);
+        background-color: #1d2026;
     }
     QPushButton:disabled {
-        background: #162035;
-        color: #475569;
-        border: 1px solid #1e2d4a;
+        background: #191c22;
+        color: #889484;
+        border: 1px solid #3e4a3d;
     }
 """
 
@@ -106,7 +106,7 @@ class PillBadge(QLabel):
         "amber": (BADGE_AMBER_BG, BADGE_AMBER_FG),
         "red": (RED_DIM, RED),
         "accent": (BADGE_ACCENT_BG, BADGE_ACCENT_FG),
-        "blue": ("rgba(59, 130, 246, 0.15)", "#60a5fa"),
+        "blue": ("rgba(162, 201, 255, 0.15)", "#a2c9ff"),
     }
 
     def __init__(self, text: str, variant: str = "default", parent=None):
@@ -137,7 +137,7 @@ class CountBadge(QLabel):
         if active:
             self.setStyleSheet("""
                 QLabel {
-                    background-color: #3b82f6;
+                    background-color: #34a547;
                     color: #ffffff;
                     border-radius: 11px;
                     padding: 2px 8px;
@@ -149,7 +149,7 @@ class CountBadge(QLabel):
             self.setStyleSheet("""
                 QLabel {
                     background-color: rgba(255, 255, 255, 0.08);
-                    color: #94a3b8;
+                    color: #becab9;
                     border-radius: 11px;
                     padding: 2px 8px;
                     font-size: 11px;
@@ -163,7 +163,7 @@ class CountBadge(QLabel):
 
 
 class ActionButton(QPushButton):
-    """Glossy action button — blue for primary, red for danger, ghost for secondary."""
+    """Glossy action button — emerald for primary, red for danger, ghost for secondary."""
 
     def __init__(self, text: str, variant: str = "primary", parent=None):
         super().__init__(text, parent)
@@ -173,7 +173,7 @@ class ActionButton(QPushButton):
             self.setStyleSheet(_RED_BTN)
             glow = QGraphicsDropShadowEffect(self)
             glow.setBlurRadius(18)
-            glow.setColor(QColor(239, 68, 68, 60))
+            glow.setColor(QColor(186, 26, 26, 60))
             glow.setOffset(0, 2)
             self.setGraphicsEffect(glow)
         elif variant == "secondary":
@@ -182,13 +182,13 @@ class ActionButton(QPushButton):
             self.setStyleSheet(_BLUE_BTN)
             glow = QGraphicsDropShadowEffect(self)
             glow.setBlurRadius(18)
-            glow.setColor(QColor(59, 130, 246, 60))
+            glow.setColor(QColor(111, 221, 120, 70))
             glow.setOffset(0, 2)
             self.setGraphicsEffect(glow)
 
 
 class SidebarButton(QPushButton):
-    """Sidebar navigation button — navy dark style with colored icons."""
+    """Sidebar navigation button — DevForge Dark style with colored icons."""
 
     def __init__(self, text: str, icon_char: str = "", parent=None):
         display = f"{icon_char}  {text}" if icon_char else text
@@ -206,9 +206,9 @@ class SidebarButton(QPushButton):
     def _apply_style(self):
         if self._active:
             bg = SIDEBAR_ITEM_ACTIVE
-            fg = "#ffffff"
+            fg = "#e1e2eb"
             fw = "600"
-            border_left = "border-left: 3px solid #3b82f6;"
+            border_left = "border-left: 3px solid #6fdd78;"
         else:
             bg = "transparent"
             fg = FG_DIM
@@ -243,3 +243,4 @@ class SidebarButton(QPushButton):
     def leaveEvent(self, event):
         self._apply_style()
         super().leaveEvent(event)
+

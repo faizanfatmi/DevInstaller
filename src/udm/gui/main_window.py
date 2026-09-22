@@ -230,7 +230,7 @@ class MainWindow(QMainWindow):
 
     def _on_selection_changed(self, count: int):
         if count > 1:
-            self.detail_panel.install_btn.setText(f"⬇  Install Selected ({count})")
+            self.detail_panel.install_btn.setText(f"Install Selected ({count})")
             self.detail_panel.uninstall_btn.setVisible(False)
         elif count == 1:
             sel = self.tool_table.selected_tools()
@@ -304,7 +304,7 @@ class MainWindow(QMainWindow):
         names = ", ".join(keys[:6])
         if count > 6:
             names += f" +{count - 6} more"
-        self.log_panel.append_log(f"🔍  AI Stack detected {count} tools: {names}")
+        self.log_panel.append_log(f"AI Stack detected {count} tools: {names}")
         self.status_bar.set_status_text(f"AI Stack — {count} tools selected")
 
     def _on_ai_clear(self):
@@ -344,7 +344,7 @@ class MainWindow(QMainWindow):
         if not names:
             return
 
-        self.log_panel.append_log("🤖  Checking latest language/compiler versions…")
+        self.log_panel.append_log("Checking latest language/compiler versions…")
         worker = VersionRefreshWorker(names)
         worker.finished_versions.connect(self._on_versions_ready)
         worker.failed.connect(self._on_versions_failed)
@@ -403,7 +403,7 @@ class MainWindow(QMainWindow):
         from udm.constants import APP_VERSION
         from udm.gui.update_dialog import UpdateDialog
 
-        self.log_panel.append_log(f"✨  New update available: {release_info['latest_version']}!")
+        self.log_panel.append_log(f"New update available: {release_info['latest_version']}!")
 
         # Construct and execute the premium update dialog modal
         dialog = UpdateDialog(release_info, APP_VERSION, self)
@@ -471,7 +471,7 @@ class MainWindow(QMainWindow):
         if failed:
             self.status_bar.set_status_text("Completed with errors")
         else:
-            self.status_bar.set_status_text("All done — happy coding! 🎉")
+            self.status_bar.set_status_text("All done — installation completed successfully.")
 
         for k, v in results.items():
             if v in ("installed", "already_installed"):
@@ -514,7 +514,7 @@ class MainWindow(QMainWindow):
                 "• Clean Oracle from the system PATH<br><br>"
                 "<i>This allows you to perform a 100% clean, fresh installation.</i>"
             )
-            wipe_btn = msg.addButton("🗑️ Wipe Out & Uninstall", QMessageBox.ButtonRole.AcceptRole)
+            wipe_btn = msg.addButton("Wipe Out & Uninstall", QMessageBox.ButtonRole.AcceptRole)
             cancel_btn = msg.addButton("Cancel", QMessageBox.ButtonRole.RejectRole)
             msg.setDefaultButton(cancel_btn)
             msg.exec()
@@ -532,7 +532,7 @@ class MainWindow(QMainWindow):
                 "• Cleans desktop & Start Menu shortcuts<br>"
                 "• Cleans system PATH"
             )
-            uninst_btn = msg.addButton("🗑️ Uninstall", QMessageBox.ButtonRole.AcceptRole)
+            uninst_btn = msg.addButton("Uninstall", QMessageBox.ButtonRole.AcceptRole)
             cancel_btn = msg.addButton("Cancel", QMessageBox.ButtonRole.RejectRole)
             msg.setDefaultButton(cancel_btn)
             msg.exec()

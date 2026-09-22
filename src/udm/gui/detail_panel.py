@@ -1,8 +1,8 @@
 """Right-side detail panel — shows selected package info, metadata, and install button."""
 
 from pathlib import Path
-from PySide6.QtCore import Qt, QUrl, Signal
-from PySide6.QtGui import QColor, QDesktopServices, QPixmap
+from PySide6.QtCore import QSize, Qt, QUrl, Signal
+from PySide6.QtGui import QColor, QDesktopServices, QIcon, QPixmap
 from PySide6.QtWidgets import (
     QHBoxLayout, QLabel, QScrollArea, QSizePolicy,
     QVBoxLayout, QWidget,
@@ -19,18 +19,18 @@ from udm.gui.widgets import ActionButton
 ICONS_DIR = Path(__file__).resolve().parent.parent / "assets" / "icons"
 
 CATEGORY_BADGE_COLORS = {
-    "Languages": ("#818cf8", "rgba(99, 102, 241, 0.22)"),
-    "Compilers": ("#4ade80", "rgba(74, 222, 128, 0.20)"),
-    "SDKs & Frameworks": ("#c084fc", "rgba(192, 132, 252, 0.20)"),
-    "Databases": ("#22d3ee", "rgba(34, 211, 238, 0.20)"),
-    "DevOps Tools": ("#38bdf8", "rgba(56, 189, 248, 0.20)"),
-    "DevOps & Tools": ("#38bdf8", "rgba(56, 189, 248, 0.20)"),
-    "Package Managers": ("#fb923c", "rgba(234, 88, 12, 0.20)"),
-    "IDEs & Editors": ("#34d399", "rgba(52, 211, 153, 0.20)"),
-    "Cloud CLIs": ("#93c5fd", "rgba(147, 197, 253, 0.20)"),
-    "Mobile Development": ("#f87171", "rgba(248, 113, 113, 0.20)"),
-    "Data Science": ("#f472b6", "rgba(244, 114, 182, 0.20)"),
-    "AI / Data Science": ("#f472b6", "rgba(244, 114, 182, 0.20)"),
+    "Languages": ("#a2c9ff", "rgba(162, 201, 255, 0.15)"),
+    "Compilers": ("#6fdd78", "rgba(111, 221, 120, 0.15)"),
+    "SDKs & Frameworks": ("#d5bbff", "rgba(213, 187, 255, 0.15)"),
+    "Databases": ("#a2c9ff", "rgba(162, 201, 255, 0.15)"),
+    "DevOps Tools": ("#becab9", "rgba(190, 202, 185, 0.15)"),
+    "DevOps & Tools": ("#becab9", "rgba(190, 202, 185, 0.15)"),
+    "Package Managers": ("#becab9", "rgba(190, 202, 185, 0.15)"),
+    "IDEs & Editors": ("#6fdd78", "rgba(111, 221, 120, 0.15)"),
+    "Cloud CLIs": ("#a2c9ff", "rgba(162, 201, 255, 0.15)"),
+    "Mobile Development": ("#d5bbff", "rgba(213, 187, 255, 0.15)"),
+    "Data Science": ("#d5bbff", "rgba(213, 187, 255, 0.15)"),
+    "AI / Data Science": ("#d5bbff", "rgba(213, 187, 255, 0.15)"),
 }
 
 TOOL_META = {
@@ -547,6 +547,15 @@ TOOL_META = {
         "source": "https://github.com/microsoft/vscode",
         "description": "Visual Studio Code is a code editor redefined and optimized for building and debugging modern web and cloud applications.",
     },
+    "rstudio": {
+        "version": "2024.09.0",
+        "size": "≈ 220 MB",
+        "license": "AGPLv3 / Commercial",
+        "website": "https://posit.co/products/open-source/rstudio/",
+        "docs": "https://docs.posit.co/ide/user/",
+        "source": "https://github.com/rstudio/rstudio",
+        "description": "RStudio Desktop is an integrated development environment for R and Python, featuring a console, syntax-highlighting editor, direct code execution, and comprehensive plotting and workspace management tools.",
+    },
     "flutter": {
         "version": "3.24.2",
         "size": "≈ 650 MB",
@@ -622,7 +631,7 @@ class _MetadataRow(QWidget):
 
         name_lbl = QLabel(label)
         name_lbl.setFixedWidth(86)
-        name_lbl.setStyleSheet("color: #94a3b8; font-size: 12px; background: transparent; border: none;")
+        name_lbl.setStyleSheet("color: #889484; font-size: 12px; background: transparent; border: none;")
         layout.addWidget(name_lbl)
 
         layout.addWidget(value_widget, stretch=1)
@@ -654,14 +663,14 @@ class _LinkRow(QWidget):
         self.text_lbl = QLabel(text)
         self.text_lbl.setStyleSheet("""
             QLabel {
-                color: #38bdf8;
+                color: #a2c9ff;
                 font-size: 12px;
                 font-weight: 500;
                 background: transparent;
                 border: none;
             }
             QLabel:hover {
-                color: #7dd3fc;
+                color: #c4dcff;
                 text-decoration: underline;
             }
         """)
@@ -684,7 +693,7 @@ class _LinkRow(QWidget):
 
 def _value_label(text: str) -> QLabel:
     lbl = QLabel(text)
-    lbl.setStyleSheet("color: #e2e8f0; font-size: 12px; background: transparent; border: none;")
+    lbl.setStyleSheet("color: #e1e2eb; font-size: 12px; background: transparent; border: none;")
     return lbl
 
 
@@ -710,8 +719,8 @@ class DetailPanel(QWidget):
         self.card.setObjectName("detailCard")
         self.card.setStyleSheet("""
             QWidget#detailCard {
-                background-color: rgba(15, 23, 42, 0.85);
-                border: 1px solid rgba(255, 255, 255, 0.08);
+                background-color: #191c22;
+                border: 1px solid #3e4a3d;
                 border-radius: 14px;
             }
         """)
@@ -732,12 +741,12 @@ class DetailPanel(QWidget):
                 margin: 0px;
             }
             QScrollBar::handle:vertical {
-                background: rgba(255, 255, 255, 0.15);
+                background: #3e4a3d;
                 border-radius: 3px;
                 min-height: 20px;
             }
             QScrollBar::handle:vertical:hover {
-                background: rgba(255, 255, 255, 0.28);
+                background: #889484;
             }
             QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical {
                 height: 0px;
@@ -774,7 +783,7 @@ class DetailPanel(QWidget):
         # Row 1: Tool Name
         self.tool_name = QLabel("Python 3.12")
         self.tool_name.setWordWrap(True)
-        self.tool_name.setStyleSheet("color: #ffffff; font-size: 16px; font-weight: 700; background: transparent; border: none;")
+        self.tool_name.setStyleSheet("color: #e1e2eb; font-size: 16px; font-weight: 700; background: transparent; border: none;")
         title_col.addWidget(self.tool_name)
 
         # Row 2: Badges row (Installed, Popular) — dedicated row so badges NEVER truncate
@@ -784,9 +793,9 @@ class DetailPanel(QWidget):
 
         self.installed_badge = QLabel("✓ Installed")
         self.installed_badge.setStyleSheet("""
-            background-color: rgba(16, 185, 129, 0.18);
-            color: #34d399;
-            border: 1px solid rgba(16, 185, 129, 0.4);
+            background-color: rgba(111, 221, 120, 0.15);
+            color: #6fdd78;
+            border: 1px solid rgba(111, 221, 120, 0.35);
             border-radius: 9px;
             padding: 2px 8px;
             font-size: 10.5px;
@@ -797,13 +806,13 @@ class DetailPanel(QWidget):
 
         self.popular_badge = QLabel("Popular")
         self.popular_badge.setStyleSheet("""
-            background-color: rgba(16, 185, 129, 0.15);
-            color: #34d399;
+            background-color: rgba(111, 221, 120, 0.15);
+            color: #6fdd78;
             border-radius: 9px;
             padding: 2px 8px;
             font-size: 10.5px;
             font-weight: 600;
-            border: none;
+            border: 1px solid rgba(111, 221, 120, 0.35);
         """)
         badges_row.addWidget(self.popular_badge)
         badges_row.addStretch()
@@ -812,7 +821,7 @@ class DetailPanel(QWidget):
         # Row 3: Subtitle
         self.tool_subtitle = QLabel("General-purpose programming language")
         self.tool_subtitle.setWordWrap(True)
-        self.tool_subtitle.setStyleSheet("color: #94a3b8; font-size: 11px; background: transparent; border: none;")
+        self.tool_subtitle.setStyleSheet("color: #becab9; font-size: 11px; background: transparent; border: none;")
         title_col.addWidget(self.tool_subtitle)
 
         header_layout.addLayout(title_col, stretch=1)
@@ -826,7 +835,7 @@ class DetailPanel(QWidget):
         )
         self.description.setWordWrap(True)
         self.description.setStyleSheet("""
-            color: #94a3b8;
+            color: #becab9;
             font-size: 12px;
             line-height: 18px;
             background: transparent;
@@ -856,7 +865,7 @@ class DetailPanel(QWidget):
         cat_box_layout.setSpacing(0)
         self.category_badge = QLabel("Languages")
         self.category_badge.setStyleSheet("""
-            color: #818cf8;
+            color: #a2c9ff;
             font-size: 12px;
             font-weight: 600;
             background: transparent;
@@ -907,8 +916,8 @@ class DetailPanel(QWidget):
         self.action_container.setObjectName("detailActions")
         self.action_container.setStyleSheet("""
             QWidget#detailActions {
-                background-color: rgba(10, 15, 28, 0.75);
-                border-top: 1px solid rgba(255, 255, 255, 0.08);
+                background-color: #0b0e14;
+                border-top: 1px solid #3e4a3d;
                 border-bottom-left-radius: 14px;
                 border-bottom-right-radius: 14px;
             }
@@ -917,13 +926,18 @@ class DetailPanel(QWidget):
         self.actions_layout.setContentsMargins(14, 10, 14, 12)
         self.actions_layout.setSpacing(6)
 
-        self.install_btn = ActionButton("⬇  Install Python 3.12", "primary")
+        self.install_btn = ActionButton("Install Python 3.12", "primary")
         self.install_btn.setFixedHeight(40)
+        self.install_btn.setCursor(Qt.CursorShape.PointingHandCursor)
+        download_icon = ICONS_DIR / "icon_download.png"
+        if download_icon.exists():
+            self.install_btn.setIcon(QIcon(str(download_icon)))
+            self.install_btn.setIconSize(QSize(16, 16))
         self.install_btn.setStyleSheet("""
             QPushButton {
                 background: qlineargradient(x1:0, y1:0, x2:1, y2:0,
-                    stop:0 #2563eb, stop:1 #3b82f6);
-                color: #ffffff;
+                    stop:0 #34a547, stop:1 #6fdd78);
+                color: #00390e;
                 border: none;
                 border-radius: 9px;
                 padding: 6px 16px;
@@ -932,35 +946,40 @@ class DetailPanel(QWidget):
             }
             QPushButton:hover {
                 background: qlineargradient(x1:0, y1:0, x2:1, y2:0,
-                    stop:0 #3b82f6, stop:1 #60a5fa);
+                    stop:0 #6fdd78, stop:1 #8bfb91);
             }
             QPushButton:pressed {
                 background: qlineargradient(x1:0, y1:0, x2:1, y2:0,
-                    stop:0 #1d4ed8, stop:1 #2563eb);
+                    stop:0 #238233, stop:1 #34a547);
             }
         """)
         self.install_btn.clicked.connect(self._on_install)
         self.actions_layout.addWidget(self.install_btn)
 
-        self.uninstall_btn = ActionButton("🗑️  Uninstall & Wipe Clean", "danger")
+        self.uninstall_btn = ActionButton("Uninstall & Wipe Clean", "danger")
         self.uninstall_btn.setFixedHeight(36)
+        self.uninstall_btn.setCursor(Qt.CursorShape.PointingHandCursor)
+        trash_icon = ICONS_DIR / "icon_trash.png"
+        if trash_icon.exists():
+            self.uninstall_btn.setIcon(QIcon(str(trash_icon)))
+            self.uninstall_btn.setIconSize(QSize(15, 15))
         self.uninstall_btn.setStyleSheet("""
             QPushButton {
-                background-color: rgba(239, 68, 68, 0.15);
-                color: #f87171;
-                border: 1px solid rgba(239, 68, 68, 0.35);
+                background-color: rgba(255, 180, 171, 0.15);
+                color: #ffb4ab;
+                border: 1px solid rgba(255, 180, 171, 0.35);
                 border-radius: 9px;
                 padding: 6px 14px;
                 font-size: 12.5px;
                 font-weight: 700;
             }
             QPushButton:hover {
-                background-color: rgba(239, 68, 68, 0.28);
-                border-color: #ef4444;
-                color: #fecaca;
+                background-color: rgba(255, 180, 171, 0.28);
+                border-color: #ffb4ab;
+                color: #ffffff;
             }
             QPushButton:pressed {
-                background-color: rgba(220, 38, 38, 0.45);
+                background-color: rgba(186, 26, 26, 0.45);
             }
         """)
         self.uninstall_btn.clicked.connect(self._on_uninstall)
@@ -984,15 +1003,20 @@ class DetailPanel(QWidget):
             self.tool_icon.setPixmap(pix)
             self.tool_icon.setText("")
         else:
-            self.tool_icon.setPixmap(QPixmap())
-            self.tool_icon.setText("📦")
+            fallback_pix = QPixmap(str(ICONS_DIR / "sb_all.png"))
+            if not fallback_pix.isNull():
+                self.tool_icon.setPixmap(fallback_pix.scaled(40, 40, Qt.AspectRatioMode.KeepAspectRatio, Qt.TransformationMode.SmoothTransformation))
+                self.tool_icon.setText("")
+            else:
+                self.tool_icon.setPixmap(QPixmap())
+                self.tool_icon.setText("")
 
         self.tool_name.setText(name)
         self.tool_subtitle.setText(desc)
 
         popular_keys = {
             "python", "python311", "nodejs", "node", "rust", "go", "docker", "git",
-            "vscode", "typescript", "java", "csharp", "flutter", "postgres"
+            "vscode", "typescript", "java", "csharp", "flutter", "postgres", "rstudio"
         }
         self.popular_badge.setVisible(key in popular_keys)
 
@@ -1042,15 +1066,28 @@ class DetailPanel(QWidget):
         if is_installed:
             self.uninstall_btn.setVisible(True)
             if key == "oracle_db_xe":
-                self.uninstall_btn.setText("🗑️  Uninstall & Wipe Clean")
+                self.uninstall_btn.setText("Uninstall & Wipe Clean")
             elif key == "oracle_sql_developer":
-                self.uninstall_btn.setText("🗑️  Uninstall & Clean")
+                self.uninstall_btn.setText("Uninstall & Clean")
             else:
-                self.uninstall_btn.setText("🗑️  Uninstall")
-            self.install_btn.setText(f"🔄  Reinstall {name}")
+                self.uninstall_btn.setText("Uninstall")
+            trash_icon = ICONS_DIR / "icon_trash.png"
+            if trash_icon.exists():
+                self.uninstall_btn.setIcon(QIcon(str(trash_icon)))
+                self.uninstall_btn.setIconSize(QSize(15, 15))
+
+            self.install_btn.setText(f"Reinstall {name}")
+            refresh_icon = ICONS_DIR / "icon_refresh.png"
+            if refresh_icon.exists():
+                self.install_btn.setIcon(QIcon(str(refresh_icon)))
+                self.install_btn.setIconSize(QSize(16, 16))
         else:
             self.uninstall_btn.setVisible(False)
-            self.install_btn.setText(f"⬇  Install {name}")
+            self.install_btn.setText(f"Install {name}")
+            download_icon = ICONS_DIR / "icon_download.png"
+            if download_icon.exists():
+                self.install_btn.setIcon(QIcon(str(download_icon)))
+                self.install_btn.setIconSize(QSize(16, 16))
 
     def _on_install(self):
         if self._current_tool:

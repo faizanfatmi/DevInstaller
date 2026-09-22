@@ -1,11 +1,12 @@
 """Search bar — floating search input with AI Stack toggle and Ctrl+K hint."""
 
+from pathlib import Path
 from PySide6.QtCore import Qt, Signal, QPropertyAnimation, QEasingCurve, QTimer
 from PySide6.QtWidgets import (
     QHBoxLayout, QLabel, QLineEdit, QVBoxLayout, QWidget,
     QGraphicsDropShadowEffect, QSizePolicy,
 )
-from PySide6.QtGui import QColor
+from PySide6.QtGui import QColor, QIcon
 
 from udm.gui.theme import (
     ACCENT_PRIMARY, BG_CARD, BG_INPUT, BG_ROW_HOVER, BADGE_ACCENT_BG,
@@ -13,12 +14,14 @@ from udm.gui.theme import (
 )
 from udm.gui.widgets import ActionButton
 
+ICONS_DIR = Path(__file__).resolve().parent.parent / "assets" / "icons"
+
 
 class StackChip(QLabel):
     def __init__(self, text, parent=None):
         super().__init__(text, parent)
-        self.setStyleSheet("QLabel{background:rgba(59,130,246,0.10);color:#60a5fa;"
-            "border:1px solid rgba(59,130,246,0.20);border-radius:4px;"
+        self.setStyleSheet("QLabel{background:rgba(111,221,120,0.12);color:#6fdd78;"
+            "border:1px solid rgba(111,221,120,0.25);border-radius:4px;"
             "padding:4px 10px;font-size:11px;font-weight:500;}")
         self.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
@@ -34,7 +37,7 @@ class ChipBar(QWidget):
         self._layout.setContentsMargins(12, 0, 12, 4)
         self._layout.setSpacing(6)
         self._stack_label = QLabel()
-        self._stack_label.setStyleSheet("color:#60a5fa;font-size:11px;font-weight:600;"
+        self._stack_label.setStyleSheet("color:#6fdd78;font-size:11px;font-weight:600;"
             "letter-spacing:0.8px;background:transparent;")
         self._layout.addWidget(self._stack_label)
         self._chips_container = QWidget()
@@ -104,7 +107,10 @@ class SearchBar(QWidget):
         search_inner.setSpacing(0)
 
         self.search_input = QLineEdit()
-        self.search_input.setPlaceholderText("🔍  Search packages, tools, or frameworks...")
+        search_icon_path = ICONS_DIR / "icon_search.png"
+        if search_icon_path.exists():
+            self.search_input.addAction(QIcon(str(search_icon_path)), QLineEdit.ActionPosition.LeadingPosition)
+        self.search_input.setPlaceholderText("Search packages, tools, or frameworks...")
         self.search_input.setClearButtonEnabled(True)
         self.search_input.textChanged.connect(self._on_text_changed)
         self.search_input.returnPressed.connect(self._on_enter_pressed)
@@ -116,9 +122,9 @@ class SearchBar(QWidget):
         # Ctrl+K shortcut hint
         shortcut_hint = QLabel("Ctrl + K")
         shortcut_hint.setStyleSheet("""
-            background-color: #162035;
-            color: #64748b;
-            border: 1px solid #1e2d4a;
+            background-color: #191c22;
+            color: #889484;
+            border: 1px solid #3e4a3d;
             border-radius: 6px;
             padding: 4px 10px;
             font-size: 11px;
@@ -154,7 +160,7 @@ class SearchBar(QWidget):
             self.search_input.setPlaceholderText("Describe your project…")
             self.search_input.clear()
         else:
-            self.search_input.setPlaceholderText("🔍  Search packages, tools, or frameworks...")
+            self.search_input.setPlaceholderText("Search packages, tools, or frameworks...")
             self.search_input.clear()
             self.chip_bar.clear_chips()
             self.ai_clear_requested.emit()
@@ -162,13 +168,13 @@ class SearchBar(QWidget):
 
     def _apply_input_style(self, ai_active):
         if ai_active:
-            bc, fbc, bg, fbg = "#3b82f6", "#60a5fa", "#162035", "#111a2e"
+            bc, fbc, bg, fbg = "#6fdd78", "#8bfb91", "#191c22", "#101319"
         else:
-            bc, fbc, bg, fbg = "#1e2d4a", "#3b82f6", BG_INPUT, "#111a2e"
+            bc, fbc, bg, fbg = "#3e4a3d", "#6fdd78", BG_INPUT, "#101319"
         self.search_input.setStyleSheet(
             f"QLineEdit{{background-color:{bg};color:{FG};border:1px solid {bc};"
             f"border-radius:8px;padding:10px 16px;font-size:13px;"
-            f"selection-background-color:rgba(59,130,246,0.25);}}"
+            f"selection-background-color:rgba(111,221,120,0.25);}}"
             f"QLineEdit:focus{{border-color:{fbc};background-color:{fbg};}}")
 
     def _on_text_changed(self, text):
@@ -190,7 +196,7 @@ class SearchBar(QWidget):
             self.chip_bar.clear_chips()
             self.chip_bar._stack_label.setText("No matching tools found.")
             self.chip_bar._stack_label.setStyleSheet(
-                "color:#f87171;font-size:11px;font-weight:500;background:transparent;")
+                "color:#ffb4ab;font-size:11px;font-weight:500;background:transparent;")
             self.chip_bar.setVisible(True)
 
     def _on_chip_clear(self):
@@ -222,13 +228,13 @@ class _AIToggleButton(QWidget):
     def _apply_style(self):
         if self._active:
             self._label.setStyleSheet(
-                "background-color: #3b82f6; color: #ffffff; border: none; "
+                "background-color: #6fdd78; color: #00390e; border: none; "
                 "border-radius: 8px; font-size: 12px; font-weight: 700;"
             )
         else:
             self._label.setStyleSheet(
-                f"background-color: #162035; color: {FG_DIM}; "
-                "border: 1px solid #1e2d4a; border-radius: 8px; "
+                f"background-color: #191c22; color: {FG_DIM}; "
+                "border: 1px solid #3e4a3d; border-radius: 8px; "
                 "font-size: 12px; font-weight: 500;"
             )
         self.setGraphicsEffect(None)
@@ -240,8 +246,8 @@ class _AIToggleButton(QWidget):
     def enterEvent(self, event):
         if not self._active:
             self._label.setStyleSheet(
-                f"background-color: #1a2744; color: {FG}; "
-                "border: 1px solid #2a3f5f; border-radius: 8px; "
+                f"background-color: #272a31; color: {FG}; "
+                "border: 1px solid #889484; border-radius: 8px; "
                 "font-size: 12px; font-weight: 500;"
             )
         super().enterEvent(event)

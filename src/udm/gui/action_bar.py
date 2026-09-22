@@ -31,7 +31,7 @@ class ActionBar(QWidget):
         # Selection count label
         self.count_label = QLabel("No packages selected")
         self.count_label.setStyleSheet(f"""
-            color: {FG_MUTED};
+            color: #becab9;
             font-size: 11px;
             font-weight: 400;
             background: transparent;
@@ -46,17 +46,17 @@ class ActionBar(QWidget):
         self.clear_btn.setStyleSheet(f"""
             QPushButton {{
                 background: transparent;
-                color: {FG_MUTED};
-                border: 1px solid {BORDER};
+                color: #889484;
+                border: 1px solid #3e4a3d;
                 border-radius: 6px;
                 padding: 4px 16px;
                 font-size: 11px;
                 font-weight: 500;
             }}
             QPushButton:hover {{
-                color: #e2e8f0;
-                background-color: rgba(255, 255, 255, 0.05);
-                border-color: #2a3f5f;
+                color: #e1e2eb;
+                background-color: #191c22;
+                border-color: #889484;
             }}
         """)
         self.clear_btn.clicked.connect(self.clear_clicked.emit)

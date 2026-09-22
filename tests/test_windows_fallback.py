@@ -21,6 +21,7 @@ def test_winget_to_choco_translation():
         ({"key": "vscode"}, "choco install vscode -y"),
         ({"key": "gcc"}, "choco install mingw -y"),
         ({"key": "cmake"}, "choco install cmake"),
+        ({"key": "rstudio"}, "choco install r.studio -y"),
     ]
 
     for tool, expected_substr in test_cases:

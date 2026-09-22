@@ -142,6 +142,7 @@ WINGET_TO_CHOCO_MAP: dict[str, str] = {
     "sublime": "choco install sublimetext4 -y",
     "neovim": "choco install neovim -y",
     "intellij": "choco install intellijidea-community -y",
+    "rstudio": "choco install r.studio -y",
 
     # ── SDKs & Frameworks ──
     "dotnet": "choco install dotnet-8.0-sdk -y",

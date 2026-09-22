@@ -37,6 +37,10 @@ class StatusBar(QWidget):
         app_icon.setAlignment(Qt.AlignmentFlag.AlignCenter)
         logo_path = resource_path(LOGO_FILENAME)
         pixmap = QPixmap(str(logo_path)) if logo_path.exists() else QPixmap()
+        if pixmap.isNull():
+            gear_icon = Path(__file__).resolve().parent.parent / "assets" / "icons" / "meta_gear.png"
+            if gear_icon.exists():
+                pixmap = QPixmap(str(gear_icon))
         if not pixmap.isNull():
             app_icon.setPixmap(
                 pixmap.scaled(
@@ -46,10 +50,7 @@ class StatusBar(QWidget):
                     Qt.TransformationMode.SmoothTransformation,
                 )
             )
-            app_icon.setStyleSheet("background: transparent;")
-        else:
-            app_icon.setText("⚙️")
-            app_icon.setStyleSheet("font-size: 11px; background: transparent;")
+        app_icon.setStyleSheet("background: transparent;")
         layout.addWidget(app_icon)
 
         version_label = QLabel(f"DevInstaller v{APP_VERSION}")
@@ -62,7 +63,7 @@ class StatusBar(QWidget):
         layout.addWidget(version_label)
 
         divider = QLabel("|")
-        divider.setStyleSheet("color: #334155; font-size: 11px; background: transparent; padding: 0 4px;")
+        divider.setStyleSheet("color: #3e4a3d; font-size: 11px; background: transparent; padding: 0 4px;")
         layout.addWidget(divider)
 
         # Center: Package count (will be updated externally)
@@ -93,7 +94,7 @@ class StatusBar(QWidget):
                 max-height: 3px;
             }}
             QProgressBar::chunk {{
-                background-color: #3b82f6;
+                background-color: #6fdd78;
                 border-radius: 1px;
             }}
         """)
@@ -116,7 +117,7 @@ class StatusBar(QWidget):
         layout.addWidget(self.status_label)
 
         # Right: Tagline with author credit
-        tagline = QLabel("Made for developers, by developers. ❤️  ·  Author by <b>Faizan-Fatmi</b>")
+        tagline = QLabel("Made for developers, by developers  ·  Author by <b>Faizan-Fatmi</b>")
         tagline.setStyleSheet(f"""
             color: {FG_MUTED};
             font-size: 11px;

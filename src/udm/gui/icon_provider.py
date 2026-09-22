@@ -119,6 +119,8 @@ TOOL_ICONS_MAP = {
     "sublime": "sublime.png",
     "neovim": "neovim.png",
     "intellij": "intellij.png",
+    "rstudio": "r.png",
+    "rdesktop": "r.png",
 
     # ── Mobile & Web ──
     "flutter": "flutter.png",
@@ -127,18 +129,18 @@ TOOL_ICONS_MAP = {
 }
 
 CATEGORY_COLORS = {
-    "Languages": ("#818cf8", "rgba(99, 102, 241, 0.22)"),
-    "Package Managers": ("#fb923c", "rgba(234, 88, 12, 0.20)"),
-    "Compilers": ("#34d399", "rgba(16, 185, 129, 0.20)"),
-    "Databases": ("#22d3ee", "rgba(34, 211, 238, 0.20)"),
-    "DevOps Tools": ("#38bdf8", "rgba(56, 189, 248, 0.20)"),
-    "DevOps & Tools": ("#38bdf8", "rgba(56, 189, 248, 0.20)"),
-    "IDEs & Editors": ("#34d399", "rgba(52, 211, 153, 0.20)"),
-    "Cloud CLIs": ("#93c5fd", "rgba(147, 197, 253, 0.20)"),
-    "Mobile Development": ("#f87171", "rgba(248, 113, 113, 0.20)"),
-    "Data Science": ("#f472b6", "rgba(244, 114, 182, 0.20)"),
-    "AI / Data Science": ("#f472b6", "rgba(244, 114, 182, 0.20)"),
-    "SDKs & Frameworks": ("#c084fc", "rgba(192, 132, 252, 0.20)"),
+    "Languages": ("#a2c9ff", "rgba(162, 201, 255, 0.15)"),
+    "Package Managers": ("#becab9", "rgba(190, 202, 185, 0.15)"),
+    "Compilers": ("#6fdd78", "rgba(111, 221, 120, 0.15)"),
+    "Databases": ("#a2c9ff", "rgba(162, 201, 255, 0.15)"),
+    "DevOps Tools": ("#becab9", "rgba(190, 202, 185, 0.15)"),
+    "DevOps & Tools": ("#becab9", "rgba(190, 202, 185, 0.15)"),
+    "IDEs & Editors": ("#6fdd78", "rgba(111, 221, 120, 0.15)"),
+    "Cloud CLIs": ("#a2c9ff", "rgba(162, 201, 255, 0.15)"),
+    "Mobile Development": ("#d5bbff", "rgba(213, 187, 255, 0.15)"),
+    "Data Science": ("#d5bbff", "rgba(213, 187, 255, 0.15)"),
+    "AI / Data Science": ("#d5bbff", "rgba(213, 187, 255, 0.15)"),
+    "SDKs & Frameworks": ("#d5bbff", "rgba(213, 187, 255, 0.15)"),
 }
 
 _PIXMAP_CACHE = {}

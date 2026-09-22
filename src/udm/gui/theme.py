@@ -1,74 +1,70 @@
-"""DevInstaller premium dark theme — deep navy color palette and global QSS stylesheet.
-
-Inspired by modern dark dashboards (VS Code, GitHub Desktop, JetBrains Toolbox).
-Deep navy backgrounds with blue accent and vibrant category badges.
-"""
+"""DevInstaller DevForge Dark theme — obsidian & charcoal palette with emerald accents."""
 
 # ─── Background hierarchy ────────────────────────────────────────────
-BG_WINDOW = "#0c1222"
-BG_SIDEBAR = "#0a0f1e"
-BG_HEADER = "#0a0f1e"
-BG_CARD = "#111a2e"
-BG_INPUT = "#162035"
-BG_ROW = "#0f1729"
-BG_ROW_HOVER = "#162035"
-BG_ROW_SELECTED = "#1a2744"
-BG_LOG = "#0a0f1e"
-BG_STATUS = "#080d1a"
+BG_WINDOW = "#101319"
+BG_SIDEBAR = "#0b0e14"
+BG_HEADER = "#0b0e14"
+BG_CARD = "#191c22"
+BG_INPUT = "#191c22"
+BG_ROW = "#191c22"
+BG_ROW_HOVER = "#272a31"
+BG_ROW_SELECTED = "#1d2026"
+BG_LOG = "#0b0e14"
+BG_STATUS = "#0b0e14"
 
 # ─── Foreground ──────────────────────────────────────────────────────
-FG = "#e2e8f0"
-FG_DIM = "#94a3b8"
-FG_MUTED = "#475569"
-FG_HEADER = "#f1f5f9"
+FG = "#e1e2eb"
+FG_DIM = "#becab9"
+FG_MUTED = "#889484"
+FG_HEADER = "#e1e2eb"
 
-# ─── Accent (blue primary) ──────────────────────────────────────────
-ACCENT_PRIMARY = "#3b82f6"
-ACCENT_SECONDARY = "#60a5fa"
-ACCENT_GRADIENT_START = "#3b82f6"
-ACCENT_GRADIENT_END = "#2563eb"
-ACCENT_GLOW = "rgba(59, 130, 246, 0.20)"
+# ─── Accent (DevForge emerald primary) ───────────────────────────────
+ACCENT_PRIMARY = "#6fdd78"
+ACCENT_SECONDARY = "#a2c9ff"
+ACCENT_GRADIENT_START = "#6fdd78"
+ACCENT_GRADIENT_END = "#34a547"
+ACCENT_GLOW = "rgba(111, 221, 120, 0.25)"
 
 # ─── Status colors ─────────────────────────────────────────────────
-GREEN = "#4ade80"
-GREEN_DIM = "#0d2e1a"
-GREEN_DARK = "#22c55e"
-RED = "#f87171"
-RED_DIM = "#2e0d1a"
+GREEN = "#6fdd78"
+GREEN_DIM = "rgba(111, 221, 120, 0.15)"
+GREEN_DARK = "#34a547"
+RED = "#ffb4ab"
+RED_DIM = "rgba(255, 180, 171, 0.15)"
 AMBER = "#fbbf24"
-CYAN = "#22d3ee"
-PURPLE = "#a78bfa"
+CYAN = "#a2c9ff"
+PURPLE = "#d5bbff"
 
 # ─── Borders ────────────────────────────────────────────────────────
-BORDER = "#1e2d4a"
-BORDER_LIGHT = "#2a3f5f"
-BORDER_ACCENT = "rgba(59, 130, 246, 0.25)"
+BORDER = "#3e4a3d"
+BORDER_LIGHT = "#3e4a3d"
+BORDER_ACCENT = "rgba(111, 221, 120, 0.30)"
 
 # ─── Badges ─────────────────────────────────────────────────────────
-BADGE_BG = "#1e2d4a"
-BADGE_GREEN_BG = "#0d2e1a"
-BADGE_GREEN_FG = "#4ade80"
-BADGE_AMBER_BG = "#2e2a0d"
+BADGE_BG = "#191c22"
+BADGE_GREEN_BG = "rgba(111, 221, 120, 0.15)"
+BADGE_GREEN_FG = "#6fdd78"
+BADGE_AMBER_BG = "rgba(251, 191, 36, 0.15)"
 BADGE_AMBER_FG = "#fbbf24"
-BADGE_ACCENT_BG = "rgba(59, 130, 246, 0.15)"
-BADGE_ACCENT_FG = "#60a5fa"
+BADGE_ACCENT_BG = "rgba(111, 221, 120, 0.15)"
+BADGE_ACCENT_FG = "#6fdd78"
 
 # ─── Progress ───────────────────────────────────────────────────────
-PROGRESS_BG = "#1e2d4a"
-PROGRESS_FG = "#3b82f6"
+PROGRESS_BG = "#191c22"
+PROGRESS_FG = "#6fdd78"
 
 # ─── Scrollbar ──────────────────────────────────────────────────────
 SCROLLBAR_BG = "transparent"
-SCROLLBAR_FG = "#1e2d4a"
+SCROLLBAR_FG = "#3e4a3d"
 
 # ─── Column header ──────────────────────────────────────────────────
-COLUMN_HEADER_FG = "#475569"
+COLUMN_HEADER_FG = "#889484"
 
 # ─── Sidebar ────────────────────────────────────────────────────────
-SIDEBAR_ITEM_HOVER = "#111a2e"
-SIDEBAR_ITEM_ACTIVE = "#162035"
-SIDEBAR_ICON_COLOR = "#475569"
-SIDEBAR_ICON_ACTIVE = "#3b82f6"
+SIDEBAR_ITEM_HOVER = "#272a31"
+SIDEBAR_ITEM_ACTIVE = "#1d2026"
+SIDEBAR_ICON_COLOR = "#889484"
+SIDEBAR_ICON_ACTIVE = "#6fdd78"
 
 
 def build_stylesheet() -> str:
@@ -83,7 +79,7 @@ def build_stylesheet() -> str:
 
 
 def _legacy_stylesheet() -> str:
-    """The original premium dark stylesheet, kept for reference/fallback."""
+    """The DevForge dark stylesheet, kept for reference/fallback."""
     return f"""
         * {{
             font-family: "Segoe UI", "SF Pro Display", "Inter", "Helvetica Neue", sans-serif;
@@ -186,17 +182,17 @@ def _legacy_stylesheet() -> str:
         QCheckBox::indicator {{
             width: 20px;
             height: 20px;
-            border: 1.5px solid #475569;
+            border: 1.5px solid {BORDER};
             border-radius: 4px;
             background-color: transparent;
         }}
         QCheckBox::indicator:checked {{
-            background-color: #3b82f6;
-            border-color: #3b82f6;
+            background-color: {ACCENT_PRIMARY};
+            border-color: {ACCENT_PRIMARY};
             image: none;
         }}
         QCheckBox::indicator:hover {{
-            border-color: #60a5fa;
+            border-color: {ACCENT_PRIMARY};
         }}
 
         QTextEdit {{
@@ -206,7 +202,7 @@ def _legacy_stylesheet() -> str:
             font-family: "JetBrains Mono", "Cascadia Code", "Consolas", monospace;
             font-size: 12px;
             padding: 14px;
-            selection-background-color: rgba(59, 130, 246, 0.25);
+            selection-background-color: rgba(111, 221, 120, 0.25);
         }}
 
         QMessageBox {{

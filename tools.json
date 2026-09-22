@@ -659,7 +659,7 @@
   {
     "key": "r",
     "name": "R",
-    "description": "Statistical computing and graphics language",
+    "description": "Statistical computing, graphics, and data science language",
     "category": "Languages",
     "detect_cmd": "Rscript --version",
     "install_command_windows": "winget install --id RProject.R -e --silent --accept-source-agreements --accept-package-agreements",
@@ -1008,6 +1008,21 @@
       "C:\\Program Files\\JetBrains\\IntelliJ IDEA Community Edition*\\bin"
     ],
     "path_required": true
+  },
+  {
+    "key": "rstudio",
+    "name": "RStudio Desktop",
+    "description": "Integrated development environment for R and Python data science",
+    "category": "IDEs & Editors",
+    "detect_cmd": "rstudio --version",
+    "install_command_windows": "winget install --id Posit.RStudio -e --silent --accept-source-agreements --accept-package-agreements",
+    "install_command_linux": "sudo apt-get install -y rstudio",
+    "install_command_mac": "brew install --cask rstudio",
+    "path_dirs_windows": [
+      "C:\\Program Files\\RStudio",
+      "C:\\Program Files\\RStudio\\bin"
+    ],
+    "path_required": false
   },
   {
     "key": "dotnet",
