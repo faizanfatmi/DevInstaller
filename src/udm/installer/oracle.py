@@ -82,7 +82,14 @@ def detect_oracle_db() -> bool:
 def detect_sql_developer() -> bool:
     """Return True if Oracle SQL Developer is installed on the system."""
     if is_windows():
-        # Check registry
+        # Check registry (HKCU first, then HKLM)
+        rc, _, _ = run_command(
+            'reg query "HKCU\\SOFTWARE\\Oracle\\sqldeveloper" /ve',
+            timeout=15,
+        )
+        if rc == 0:
+            return True
+
         rc, _, _ = run_command(
             'reg query "HKLM\\SOFTWARE\\Oracle\\sqldeveloper" /ve',
             timeout=15,
@@ -90,18 +97,20 @@ def detect_sql_developer() -> bool:
         if rc == 0:
             return True
 
-        # Check common install locations
+        # Check common install locations (including user-space paths)
         sqldeveloper_paths = [
             r"C:\sqldeveloper",
             r"C:\app\sqldeveloper",
+            os.path.join(os.environ.get("LOCALAPPDATA", ""), "sqldeveloper"),
+            os.path.join(os.environ.get("LOCALAPPDATA", ""), "Programs", "sqldeveloper"),
+            os.path.join(os.environ.get("USERPROFILE", ""), "sqldeveloper"),
             os.path.join(os.environ.get("PROGRAMFILES", ""), "sqldeveloper"),
-            os.path.join(
-                os.environ.get("LOCALAPPDATA", ""), "sqldeveloper"
-            ),
         ]
         for p in sqldeveloper_paths:
             if p and os.path.isdir(p):
-                return True
+                if os.path.isfile(os.path.join(p, "sqldeveloper.exe")) or \
+                   os.path.isfile(os.path.join(p, "sqldeveloper", "sqldeveloper.exe")):
+                    return True
 
         # Check if sqldeveloper.exe exists via where
         rc2, _, _ = run_command("where sqldeveloper", timeout=15)
@@ -112,6 +121,7 @@ def detect_sql_developer() -> bool:
         linux_paths = [
             "/opt/sqldeveloper",
             "/usr/local/sqldeveloper",
+            os.path.expanduser("~/.local/share/sqldeveloper"),
             os.path.expanduser("~/sqldeveloper"),
         ]
         for p in linux_paths:
@@ -242,8 +252,10 @@ def _uninstall_sql_developer_windows() -> bool:
     sqldeveloper_dirs = [
         r"C:\sqldeveloper",
         r"C:\app\sqldeveloper",
-        os.path.join(os.environ.get("PROGRAMFILES", ""), "sqldeveloper"),
         os.path.join(os.environ.get("LOCALAPPDATA", ""), "sqldeveloper"),
+        os.path.join(os.environ.get("LOCALAPPDATA", ""), "Programs", "sqldeveloper"),
+        os.path.join(os.environ.get("USERPROFILE", ""), "sqldeveloper"),
+        os.path.join(os.environ.get("PROGRAMFILES", ""), "sqldeveloper"),
     ]
     for d in sqldeveloper_dirs:
         if d and os.path.isdir(d):
@@ -258,9 +270,18 @@ def _uninstall_sql_developer_windows() -> bool:
         _safe_rmtree(user_prefs)
         log(f"    Removed user preferences: {user_prefs}")
 
-    # Clean registry
-    run_command(r'reg delete "HKLM\SOFTWARE\Oracle\sqldeveloper" /f', timeout=15)
+    # Remove user shortcuts
+    desktop = os.path.join(os.environ.get("USERPROFILE", ""), "Desktop")
+    _safe_remove(os.path.join(desktop, "Oracle SQL Developer.lnk"))
+    start_menu = os.path.join(
+        os.environ.get("APPDATA", ""),
+        "Microsoft", "Windows", "Start Menu", "Programs",
+    )
+    _safe_remove(os.path.join(start_menu, "Oracle SQL Developer.lnk"))
+
+    # Clean registry (HKCU first, then HKLM without failing if non-admin)
     run_command(r'reg delete "HKCU\SOFTWARE\Oracle\sqldeveloper" /f', timeout=15)
+    run_command(r'reg delete "HKLM\SOFTWARE\Oracle\sqldeveloper" /f', timeout=15)
 
     # Clean from PATH
     _clean_sqldeveloper_from_path_windows()
@@ -327,12 +348,12 @@ _ORACLE_XE_LINUX_URL = (
     "oracle-database-xe-21c-1.0-1.ol8.x86_64.rpm"
 )
 _SQLDEVELOPER_WIN_URL = (
-    "https://download.oracle.com/otn-pub/java/sqldeveloper/"
-    "sqldeveloper-23.1.1.345.2114-no-jre.zip"
+    "https://download.oracle.com/otn_software/java/sqldeveloper/"
+    "sqldeveloper-26.2.0.186.2220-x64.zip"
 )
 _SQLDEVELOPER_LINUX_URL = (
-    "https://download.oracle.com/otn-pub/java/sqldeveloper/"
-    "sqldeveloper-23.1.1.345.2114-no-jre.zip"
+    "https://download.oracle.com/otn_software/java/sqldeveloper/"
+    "sqldeveloper-26.2.0.186.2220-no-jre.zip"
 )
 
 # Default SYS/SYSTEM password used during silent install.
@@ -350,12 +371,12 @@ def install_oracle_db() -> bool:
     return False
 
 
-def install_sql_developer() -> bool:
-    """Download and install Oracle SQL Developer."""
+def install_sql_developer(archive_path: str | None = None) -> bool:
+    """Install Oracle SQL Developer from an archive or path."""
     if is_windows():
-        return _install_sql_developer_windows()
+        return _install_sql_developer_windows(archive_path=archive_path)
     elif is_linux():
-        return _install_sql_developer_linux()
+        return _install_sql_developer_linux(archive_path=archive_path)
     log("  ⚠ SQL Developer is not available on this platform.")
     return False
 
@@ -496,100 +517,228 @@ def _install_oracle_db_linux() -> bool:
     return True
 
 
-def _install_sql_developer_windows() -> bool:
-    """Install Oracle SQL Developer on Windows (zip-based)."""
+def _get_sqldeveloper_install_dir_windows() -> str:
+    """Return user-writable install path for SQL Developer on Windows."""
+    try:
+        test_file = r"C:\.test_devinstaller_write"
+        with open(test_file, "w") as f:
+            f.write("1")
+        os.remove(test_file)
+        return r"C:\sqldeveloper"
+    except Exception:
+        pass
+
+    local_app_data = os.environ.get("LOCALAPPDATA")
+    if local_app_data:
+        return os.path.join(local_app_data, "sqldeveloper")
+    user_profile = os.environ.get("USERPROFILE", os.path.expanduser("~"))
+    return os.path.join(user_profile, "sqldeveloper")
+
+
+def _find_sqldeveloper_exe(base_dir: str) -> str | None:
+    """Find sqldeveloper.exe in base_dir or its subfolders."""
+    direct = os.path.join(base_dir, "sqldeveloper.exe")
+    if os.path.isfile(direct):
+        return direct
+    nested = os.path.join(base_dir, "sqldeveloper", "sqldeveloper.exe")
+    if os.path.isfile(nested):
+        return nested
+    for match in glob.glob(os.path.join(base_dir, "*", "sqldeveloper.exe")):
+        if os.path.isfile(match):
+            return match
+    return None
+
+
+def _download_sql_developer(url: str, dest_zip: str) -> bool:
+    """Download SQL Developer archive with user-agent and progress logging."""
+    log("  Downloading Oracle SQL Developer (~500 MB)…")
+    log(f"  Source: {url}")
+    log("  This may take a few minutes depending on your internet connection.")
+    try:
+        import urllib.request
+        headers = {
+            "User-Agent": (
+                "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
+                "AppleWebKit/537.36 (KHTML, like Gecko) "
+                "Chrome/120.0.0.0 Safari/537.36"
+            )
+        }
+        req = urllib.request.Request(url, headers=headers)
+        with urllib.request.urlopen(req, timeout=3600) as response, open(dest_zip, "wb") as out_file:
+            total_size = int(response.headers.get("Content-Length", 0))
+            chunk_size = 2 * 1024 * 1024  # 2MB chunks
+            downloaded = 0
+            last_pct = 0
+            while True:
+                chunk = response.read(chunk_size)
+                if not chunk:
+                    break
+                out_file.write(chunk)
+                downloaded += len(chunk)
+                if total_size > 0:
+                    pct = int(downloaded * 100 / total_size)
+                    if pct >= last_pct + 10:
+                        log(f"    Downloaded {pct}% ({downloaded // (1024 * 1024)} MB / {total_size // (1024 * 1024)} MB)…")
+                        last_pct = pct
+
+        if os.path.isfile(dest_zip) and os.path.getsize(dest_zip) > 10 * 1024 * 1024:
+            with open(dest_zip, "rb") as f:
+                header = f.read(4)
+                if header == b"PK\x03\x04":
+                    log("  ✓ Download complete and archive verified.")
+                    return True
+        log("  ✗ Downloaded file is invalid or incomplete.")
+        return False
+    except Exception as exc:
+        log(f"  ✗ Download failed: {exc}")
+        return False
+
+
+def _find_or_download_sqldeveloper_archive(
+    archive_path: str | None = None, is_win: bool = True
+) -> tuple[str | None, str | None]:
+    """Return (source_path, temp_dir_to_clean)."""
+    # 1. Custom provided path
+    if archive_path and archive_path.strip():
+        p = os.path.expanduser(os.path.expandvars(archive_path.strip().strip('"').strip("'")))
+        if os.path.exists(p):
+            return (p, None)
+        log(f"  ✗ Provided path does not exist: {p}")
+        return (None, None)
+
+    # 2. Environment variable
+    env_path = os.environ.get("SQLDEVELOPER_ARCHIVE", "").strip().strip('"').strip("'")
+    if env_path:
+        p = os.path.expanduser(os.path.expandvars(env_path))
+        if os.path.exists(p):
+            return (p, None)
+
+    # 3. Check Downloads folder for already downloaded zip
+    from udm.gui.oracle_dialog import _detect_default_sqldeveloper_path
+    detected = _detect_default_sqldeveloper_path()
+    if detected:
+        log(f"  Using local SQL Developer archive found in Downloads: {detected}")
+        return (detected, None)
+
+    # 4. Automatic direct download from Oracle's direct link
     import tempfile
-
-    install_dir = r"C:\sqldeveloper"
-    temp_dir = tempfile.mkdtemp(prefix="sqldeveloper_")
-    zip_path = os.path.join(temp_dir, "sqldeveloper.zip")
-
-    log("  Downloading Oracle SQL Developer…")
-    rc, out, err = run_command(
-        f'powershell -Command "'
-        f"[Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12; "
-        f"Invoke-WebRequest -Uri '{_SQLDEVELOPER_WIN_URL}' "
-        f"-OutFile '{zip_path}' -UseBasicParsing"
-        f'"',
-        timeout=1200,
-    )
-    if rc != 0:
-        log(f"  ✗ Download failed: {err}")
-        _safe_rmtree(temp_dir)
-        return False
-
-    log("  Extracting SQL Developer…")
-    rc, out, err = run_command(
-        f'powershell -Command "Expand-Archive -Path \'{zip_path}\' '
-        f"-DestinationPath 'C:\\' -Force\"",
-        timeout=300,
-    )
-    if rc != 0:
-        log(f"  ✗ Extraction failed: {err}")
-        _safe_rmtree(temp_dir)
-        return False
+    temp_dir = tempfile.mkdtemp(prefix="sqldeveloper_dl_")
+    dest_zip = os.path.join(temp_dir, "sqldeveloper.zip")
+    url = _SQLDEVELOPER_WIN_URL if is_win else _SQLDEVELOPER_LINUX_URL
+    if _download_sql_developer(url, dest_zip):
+        return (dest_zip, temp_dir)
 
     _safe_rmtree(temp_dir)
+    return (None, None)
 
-    if os.path.isdir(install_dir):
-        log(f"  ✓ SQL Developer installed to {install_dir}")
-        _create_shortcut_windows(install_dir)
+
+def _install_sql_developer_windows(archive_path: str | None = None) -> bool:
+    """Install Oracle SQL Developer on Windows (zip or directory based)."""
+    import zipfile
+
+    source_path, temp_dir = _find_or_download_sqldeveloper_archive(archive_path, is_win=True)
+    if not source_path:
+        return False
+
+    install_dir = _get_sqldeveloper_install_dir_windows()
+    log(f"  Target installation directory: {install_dir}")
+
+    try:
+        if os.path.isdir(source_path):
+            log(f"  Installing from extracted directory: {source_path}")
+            exe = _find_sqldeveloper_exe(source_path)
+            if not exe:
+                log("  ✗ Could not find sqldeveloper.exe inside specified folder.")
+                return False
+            if os.path.normpath(source_path).lower() != os.path.normpath(install_dir).lower():
+                log(f"  Copying files to {install_dir}…")
+                _safe_rmtree(install_dir)
+                shutil.copytree(source_path, install_dir)
+                actual_dir = install_dir
+            else:
+                actual_dir = source_path
+        elif zipfile.is_zipfile(source_path):
+            log(f"  Extracting SQL Developer from: {source_path}…")
+            _safe_rmtree(install_dir)
+            os.makedirs(install_dir, exist_ok=True)
+            with zipfile.ZipFile(source_path, "r") as zf:
+                zf.extractall(install_dir)
+            actual_dir = install_dir
+        else:
+            log(f"  ✗ Specified file is not a valid zip archive: {source_path}")
+            return False
+
+        exe_path = _find_sqldeveloper_exe(actual_dir)
+        if not exe_path:
+            log("  ✗ Extraction completed but sqldeveloper.exe was not found.")
+            return False
+
+        actual_install_dir = os.path.dirname(exe_path)
+        log(f"  ✓ Oracle SQL Developer ready at: {actual_install_dir}")
+
+        _create_shortcut_windows(actual_install_dir)
+
+        try:
+            from udm.platform.path import add_to_path
+            add_to_path(actual_install_dir)
+        except Exception as exc:
+            log(f"  ⚠ Could not add to PATH: {exc}")
+
         return True
-    else:
-        log("  ✗ SQL Developer directory not found after extraction.")
+    finally:
+        if temp_dir:
+            _safe_rmtree(temp_dir)
+
+
+def _install_sql_developer_linux(archive_path: str | None = None) -> bool:
+    """Install Oracle SQL Developer on Linux (zip or directory based)."""
+    import zipfile
+
+    source_path, temp_dir = _find_or_download_sqldeveloper_archive(archive_path, is_win=False)
+    if not source_path:
         return False
 
+    is_root = os.geteuid() == 0 if hasattr(os, "geteuid") else False
+    install_dir = "/opt/sqldeveloper" if is_root else os.path.expanduser("~/.local/share/sqldeveloper")
+    log(f"  Target installation directory: {install_dir}")
 
-def _install_sql_developer_linux() -> bool:
-    """Install Oracle SQL Developer on Linux (zip-based)."""
-    import tempfile
+    try:
+        if os.path.isdir(source_path):
+            log(f"  Installing from extracted directory: {source_path}")
+            if os.path.normpath(source_path) != os.path.normpath(install_dir):
+                _safe_rmtree(install_dir)
+                shutil.copytree(source_path, install_dir)
+            actual_dir = install_dir
+        elif zipfile.is_zipfile(source_path):
+            log(f"  Extracting SQL Developer from: {source_path}…")
+            _safe_rmtree(install_dir)
+            os.makedirs(install_dir, exist_ok=True)
+            with zipfile.ZipFile(source_path, "r") as zf:
+                zf.extractall(install_dir)
+            actual_dir = install_dir
+        else:
+            log(f"  ✗ Specified file is not a valid zip archive: {source_path}")
+            return False
 
-    install_dir = "/opt/sqldeveloper"
-    temp_dir = tempfile.mkdtemp(prefix="sqldeveloper_")
-    zip_path = os.path.join(temp_dir, "sqldeveloper.zip")
+        _create_shortcut_linux(actual_dir)
 
-    log("  Downloading Oracle SQL Developer…")
-    rc, out, err = run_command(
-        f"curl -L -o '{zip_path}' '{_SQLDEVELOPER_LINUX_URL}'",
-        timeout=1200,
-    )
-    if rc != 0:
-        log(f"  ✗ Download failed: {err}")
-        _safe_rmtree(temp_dir)
-        return False
+        try:
+            from udm.platform.path import add_to_path
+            add_to_path(actual_dir)
+        except Exception:
+            pass
 
-    log("  Extracting SQL Developer…")
-    _safe_rmtree(install_dir)
-    rc, out, err = run_command(
-        f"sudo unzip -o '{zip_path}' -d /opt/",
-        timeout=300,
-    )
-    if rc != 0:
-        log(f"  ✗ Extraction failed: {err}")
-        _safe_rmtree(temp_dir)
-        return False
-
-    _safe_rmtree(temp_dir)
-
-    # Create a symlink for easy access
-    run_command(
-        f"sudo ln -sf {install_dir}/sqldeveloper.sh /usr/local/bin/sqldeveloper",
-        timeout=15,
-    )
-
-    if os.path.isdir(install_dir):
-        log(f"  ✓ SQL Developer installed to {install_dir}")
-        _create_shortcut_linux(install_dir)
+        log(f"  ✓ SQL Developer installed to {actual_dir}")
         return True
-    else:
-        log("  ✗ SQL Developer directory not found after extraction.")
-        return False
+    finally:
+        if temp_dir:
+            _safe_rmtree(temp_dir)
 
 
 # ── Lifecycle orchestrator ──────────────────────────────────────────────
 
 def oracle_lifecycle(tools: list[dict]) -> dict[str, str]:
-    """Run the full Oracle lifecycle: detect → uninstall if needed → install.
+    """Run the Oracle lifecycle: detect → uninstall if needed → install.
 
     Parameters
     ----------
@@ -603,40 +752,25 @@ def oracle_lifecycle(tools: list[dict]) -> dict[str, str]:
         (``'installed'`` or ``'failed'``).
     """
     results: dict[str, str] = {}
+    tool_keys = {t.get("key", "") for t in tools}
 
-    db_present = detect_oracle_db()
-    sqld_present = detect_sql_developer()
+    db_present = detect_oracle_db() if "oracle_db_xe" in tool_keys else False
+    sqld_present = detect_sql_developer() if "oracle_sql_developer" in tool_keys else False
 
     log("\n══ Oracle Lifecycle ══════════════════════════════════════")
 
     if db_present or sqld_present:
-        log("  Existing Oracle installation(s) detected.")
+        log("  Existing installation(s) detected for selected tools:")
         if db_present:
-            log("    • Oracle Database XE: FOUND")
-        if sqld_present:
-            log("    • Oracle SQL Developer: FOUND")
-        log("  Performing complete uninstall before fresh install…")
-        log("")
-
-        # Always uninstall both if either is found
-        if db_present:
-            log("── Uninstalling Oracle Database XE ──────────────────────")
+            log("    • Oracle Database XE: FOUND -> Performing clean uninstall…")
             uninstall_oracle_db()
-
         if sqld_present:
-            log("── Uninstalling Oracle SQL Developer ────────────────────")
+            log("    • Oracle SQL Developer: FOUND -> Performing clean uninstall…")
             uninstall_sql_developer()
-
-        log("")
-        log("  ✓ Uninstall phase complete. Proceeding with fresh install…")
+        log("  ✓ Uninstall phase complete. Proceeding with fresh install…\n")
     else:
-        log("  No existing Oracle installations detected.")
-        log("  Proceeding with fresh install…")
-
-    log("")
-
-    # Determine which tools to install based on selection
-    tool_keys = {t.get("key", "") for t in tools}
+        log("  No existing installations detected for selected tools.")
+        log("  Proceeding with fresh install…\n")
 
     # Install Oracle Database XE
     if "oracle_db_xe" in tool_keys:
@@ -648,8 +782,10 @@ def oracle_lifecycle(tools: list[dict]) -> dict[str, str]:
 
     # Install SQL Developer
     if "oracle_sql_developer" in tool_keys:
+        sqld_tool = next((t for t in tools if t.get("key") == "oracle_sql_developer"), {})
+        archive_path = sqld_tool.get("archive_path")
         log("── Installing Oracle SQL Developer ──────────────────────")
-        if install_sql_developer():
+        if install_sql_developer(archive_path=archive_path):
             results["oracle_sql_developer"] = "installed"
         else:
             results["oracle_sql_developer"] = "failed"
@@ -805,23 +941,34 @@ def _clean_oracle_from_path_windows() -> None:
 
 
 def _clean_sqldeveloper_from_path_windows() -> None:
-    """Remove SQL Developer entries from the Windows system PATH."""
-    rc, out, _ = run_command(
-        'powershell -Command "[Environment]::GetEnvironmentVariable(\'Path\', \'Machine\')"',
-        timeout=15,
-    )
-    if rc != 0:
-        return
+    """Remove SQL Developer entries from the Windows user and system PATH."""
+    try:
+        from udm.platform.path import _windows_get_user_path, _windows_set_user_path
+        user_path = _windows_get_user_path()
+        parts = [p.strip() for p in user_path.split(";") if p.strip()]
+        cleaned = [p for p in parts if "sqldeveloper" not in p.lower()]
+        if len(cleaned) < len(parts):
+            _windows_set_user_path(";".join(cleaned))
+            log("    Removed SQL Developer entries from user PATH.")
+    except Exception:
+        pass
 
-    original = out.strip()
-    parts = original.split(";")
-    cleaned = [p for p in parts if "sqldeveloper" not in p.lower()]
-
-    if len(cleaned) < len(parts):
-        new_path = ";".join(cleaned)
-        run_command(
-            f'powershell -Command "[Environment]::SetEnvironmentVariable(\'Path\', '
-            f'\'{new_path}\', \'Machine\')"',
+    try:
+        rc, out, _ = run_command(
+            'powershell -Command "[Environment]::GetEnvironmentVariable(\'Path\', \'Machine\')"',
             timeout=15,
         )
-        log("    Removed SQL Developer entries from system PATH.")
+        if rc == 0:
+            original = out.strip()
+            parts = original.split(";")
+            cleaned = [p for p in parts if "sqldeveloper" not in p.lower()]
+            if len(cleaned) < len(parts):
+                new_path = ";".join(cleaned)
+                run_command(
+                    f'powershell -Command "[Environment]::SetEnvironmentVariable(\'Path\', '
+                    f'\'{new_path}\', \'Machine\')"',
+                    timeout=15,
+                )
+                log("    Removed SQL Developer entries from system PATH.")
+    except Exception:
+        pass

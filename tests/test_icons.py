@@ -3,7 +3,7 @@
 import json
 import sys
 from pathlib import Path
-from PySide6.QtGui import QGuiApplication
+from PySide6.QtWidgets import QApplication
 
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT / "src"))
@@ -16,7 +16,7 @@ _app = None
 def _get_qapp():
     global _app
     if _app is None:
-        _app = QGuiApplication.instance() or QGuiApplication(sys.argv)
+        _app = QApplication.instance() or QApplication(sys.argv)
     return _app
 
 

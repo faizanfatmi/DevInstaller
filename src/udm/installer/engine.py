@@ -258,7 +258,8 @@ def install_tool(tool: dict) -> bool:
         if key == "oracle_db_xe":
             return install_oracle_db()
         elif key == "oracle_sql_developer":
-            return install_sql_developer()
+            archive_path = tool.get("archive_path")
+            return install_sql_developer(archive_path=archive_path)
         log(f"  ⚠ Unknown Oracle tool key: {key}")
         return False
 

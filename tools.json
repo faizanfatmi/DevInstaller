@@ -1376,9 +1376,11 @@
     "install_command_linux": "__oracle_custom__",
     "install_command_mac": "",
     "path_dirs_windows": [
+      "%LOCALAPPDATA%\\sqldeveloper",
       "C:\\sqldeveloper"
     ],
     "path_dirs_linux": [
+      "~/.local/share/sqldeveloper",
       "/opt/sqldeveloper"
     ],
     "path_required": true,

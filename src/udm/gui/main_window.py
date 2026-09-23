@@ -252,6 +252,34 @@ class MainWindow(QMainWindow):
                 self._signals.tool_detected.emit(key, present)
             threading.Thread(target=check, daemon=True).start()
 
+    def _prompt_sqldeveloper_archive(self, tools: list[dict]) -> list[dict] | None:
+        """Prompt user for SQL Developer archive path if oracle_sql_developer is in tools.
+
+        Returns updated tools list, or None if cancelled.
+        """
+        sqld_tool = next((t for t in tools if t.get("key") == "oracle_sql_developer"), None)
+        if not sqld_tool or sqld_tool.get("archive_path"):
+            return tools
+
+        from PySide6.QtWidgets import QDialog
+        from udm.gui.oracle_dialog import OraclePathDialog
+
+        dialog = OraclePathDialog(parent=self)
+        if dialog.exec() == QDialog.DialogCode.Accepted:
+            path = dialog.get_path()
+            if path:
+                sqld_tool["archive_path"] = path
+                self.log_panel.append_log(f"Oracle SQL Developer path set: {path}")
+                return tools
+
+        if len(tools) == 1:
+            self.log_panel.append_log("ℹ Oracle SQL Developer installation cancelled by user.")
+            return None
+
+        self.log_panel.append_log("ℹ Oracle SQL Developer skipped by user.")
+        remaining = [t for t in tools if t.get("key") != "oracle_sql_developer"]
+        return remaining if remaining else None
+
     def _on_detail_install(self, tool: dict):
         """Handle install button click from the detail panel."""
         if self._installing:
@@ -273,6 +301,10 @@ class MainWindow(QMainWindow):
         elif tool:
             tools = [tool]
         else:
+            return
+
+        tools = self._prompt_sqldeveloper_archive(tools)
+        if not tools:
             return
 
         self._installing = True
@@ -423,6 +455,10 @@ class MainWindow(QMainWindow):
             QMessageBox.information(self, "Busy", "An installation is already running.")
             return
 
+        tools = self._prompt_sqldeveloper_archive(tools)
+        if not tools:
+            return
+
         self.log_panel.append_log("Checking internet connection…")
         if not check_internet():
             QMessageBox.critical(
@@ -528,9 +564,9 @@ class MainWindow(QMainWindow):
             msg.setText(
                 "<h3>Confirm SQL Developer Uninstall</h3>"
                 "Are you sure you want to completely remove <b>Oracle SQL Developer</b>?<br><br>"
-                "• Deletes <code>C:\\sqldeveloper</code><br>"
+                "• Deletes SQL Developer directory (from user space / system)<br>"
                 "• Cleans desktop & Start Menu shortcuts<br>"
-                "• Cleans system PATH"
+                "• Cleans user and system PATH"
             )
             uninst_btn = msg.addButton("Uninstall", QMessageBox.ButtonRole.AcceptRole)
             cancel_btn = msg.addButton("Cancel", QMessageBox.ButtonRole.RejectRole)
