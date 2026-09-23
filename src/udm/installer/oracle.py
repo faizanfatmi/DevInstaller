@@ -17,7 +17,7 @@ import os
 import shutil
 import glob
 
-from udm.installer.callbacks import log
+from udm.installer.callbacks import log, notify
 from udm.platform import is_linux, is_windows, run_command
 
 

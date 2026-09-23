@@ -1,5 +1,7 @@
 """Status bar — branded footer with version, package count, and tagline."""
 
+from pathlib import Path
+
 from PySide6.QtCore import QEasingCurve, QPropertyAnimation, Qt
 from PySide6.QtGui import QPixmap
 from PySide6.QtWidgets import QHBoxLayout, QLabel, QProgressBar, QWidget
