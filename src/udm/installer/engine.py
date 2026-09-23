@@ -20,6 +20,7 @@ from udm.installer.prerequisites import (
     ensure_homebrew,
     ensure_pacman_synced,
     ensure_windows_prerequisites,
+    is_choco_available,
     is_winget_available,
 )
 from udm.installer.windows_packages import translate_winget_to_choco
@@ -32,6 +33,7 @@ from udm.platform import (
     is_windows,
     linux_distro_family,
     linux_distro_name,
+    remove_from_path,
     resolve_env_path,
     run_command,
     run_privileged_command,
@@ -128,8 +130,115 @@ def detect_tool(tool: dict) -> bool:
     return False
 
 
+def _clean_tool_shortcuts(tool: dict) -> None:
+    """Remove desktop and Start Menu shortcuts created for this tool."""
+    import os
+    if not is_windows():
+        return
+
+    name = tool.get("name", "")
+    key = tool.get("key", "")
+    binary = tool.get("binary", "")
+
+    keywords = {name.lower(), key.lower()}
+    if binary:
+        keywords.add(binary.lower().replace(".exe", ""))
+
+    search_dirs = [
+        os.path.join(os.environ.get("USERPROFILE", ""), "Desktop"),
+        os.path.join(os.environ.get("PUBLIC", ""), "Desktop"),
+        os.path.join(
+            os.environ.get("APPDATA", ""),
+            r"Microsoft\Windows\Start Menu\Programs",
+        ),
+        os.path.join(
+            os.environ.get("PROGRAMDATA", ""),
+            r"Microsoft\Windows\Start Menu\Programs",
+        ),
+    ]
+
+    for base in search_dirs:
+        if not base or not os.path.isdir(base):
+            continue
+        try:
+            for root, dirs, files in os.walk(base):
+                for f in files:
+                    if f.lower().endswith(".lnk"):
+                        stem = os.path.splitext(f.lower())[0]
+                        if any(k in stem for k in keywords if len(k) >= 3):
+                            full_path = os.path.join(root, f)
+                            try:
+                                os.remove(full_path)
+                                log(f"    Removed shortcut: {full_path}")
+                            except Exception:
+                                pass
+        except Exception:
+            pass
+
+
+def _clean_tool_paths(tool: dict) -> None:
+    """Remove tool path directories from user PATH."""
+    dirs = []
+    dirs.extend(tool.get("path_dirs", []))
+    if is_windows():
+        dirs.extend(tool.get("path_dirs_windows", []))
+    elif is_linux():
+        dirs.extend(tool.get("path_dirs_linux", []))
+    elif is_mac():
+        dirs.extend(tool.get("path_dirs_mac", []))
+
+    for d in dirs:
+        if d:
+            remove_from_path(d)
+
+
+def _clean_tool_residuals(tool: dict) -> None:
+    """Remove leftover installation folders in user space if detected."""
+    import os
+    import shutil
+
+    dirs = []
+    if is_windows():
+        dirs.extend(tool.get("path_dirs_windows", []))
+        dirs.extend(tool.get("path_dirs", []))
+    elif is_linux():
+        dirs.extend(tool.get("path_dirs_linux", []))
+        dirs.extend(tool.get("path_dirs", []))
+    elif is_mac():
+        dirs.extend(tool.get("path_dirs_mac", []))
+        dirs.extend(tool.get("path_dirs", []))
+
+    user_prefix = os.path.expanduser("~").lower()
+    local_app_data = os.environ.get("LOCALAPPDATA", "").lower()
+    app_data = os.environ.get("APPDATA", "").lower()
+
+    for raw in dirs:
+        resolved = resolve_env_path(raw)
+        if not resolved or not os.path.isdir(resolved):
+            continue
+        norm = os.path.normpath(resolved).lower()
+        is_user_space = (
+            norm.startswith(user_prefix)
+            or (local_app_data and norm.startswith(local_app_data))
+            or (app_data and norm.startswith(app_data))
+        )
+        if is_user_space and len(norm) > len(user_prefix) + 3:
+            try:
+                target_dir = resolved
+                if os.path.basename(target_dir).lower() == "bin":
+                    parent = os.path.dirname(target_dir)
+                    tool_name = tool.get("name", "").lower()
+                    tool_key = tool.get("key", "").lower()
+                    if tool_key in os.path.basename(parent).lower() or tool_name in os.path.basename(parent).lower():
+                        target_dir = parent
+                shutil.rmtree(target_dir, ignore_errors=True)
+                log(f"    Removed leftover directory: {target_dir}")
+            except Exception:
+                pass
+
+
 def uninstall_tool(tool: dict) -> bool:
-    """Uninstall a tool using platform-specific commands or custom modules."""
+    """Uninstall a tool completely using package managers, PATH cleaning, and shortcut wipeout."""
     name = tool.get("name", "Unknown")
     key = tool.get("key", "")
 
@@ -137,61 +246,130 @@ def uninstall_tool(tool: dict) -> bool:
     if key == "oracle_db_xe":
         from udm.installer.oracle import uninstall_oracle_db
         log(f"Uninstalling {name} (complete wipeout)…")
-        return uninstall_oracle_db()
+        res = uninstall_oracle_db()
+        _clean_tool_paths(tool)
+        _clean_tool_shortcuts(tool)
+        return res
     elif key == "oracle_sql_developer":
         from udm.installer.oracle import uninstall_sql_developer
         log(f"Uninstalling {name}…")
-        return uninstall_sql_developer()
+        res = uninstall_sql_developer()
+        _clean_tool_paths(tool)
+        _clean_tool_shortcuts(tool)
+        return res
 
     log(f"Uninstalling {name}…")
+    cmd_success = False
 
     if is_windows():
         cmd = tool.get("install_command_windows", "")
-        # Check winget command: winget install --id <Id> ...
+        # 1. Winget
         if "winget install" in cmd:
             import re
             m = re.search(r"--id\s+([^\s]+)", cmd)
             if m:
                 pkg_id = m.group(1)
-                uninst_cmd = f"winget uninstall --id {pkg_id} --silent --accept-source-agreements"
+                uninst_cmd = f"winget uninstall --id {pkg_id} --silent --accept-source-agreements --force"
                 rc, out, err = run_command(uninst_cmd, timeout=300)
                 if rc == 0:
                     log(f"  ✓ {name} uninstalled via winget.")
-                    return True
+                    cmd_success = True
                 else:
-                    log(f"  ⚠ winget uninstall failed: {err}")
-        # Check choco command: choco install <pkg> -y
-        if "choco install" in cmd:
-            parts = cmd.split()
-            if len(parts) >= 3:
-                pkg = parts[2]
-                uninst_cmd = f"choco uninstall {pkg} -y"
+                    log(f"  ℹ winget uninstall output: {out} {err}")
+
+        # 2. Chocolatey (or fallback if winget didn't find package)
+        if ("choco install" in cmd or not cmd_success) and is_choco_available():
+            pkg = None
+            if "choco install" in cmd:
+                parts = cmd.split()
+                if len(parts) >= 3:
+                    pkg = parts[2]
+            if pkg:
+                uninst_cmd = f"choco uninstall {pkg} -y --remove-dependencies"
                 rc, out, err = run_command(uninst_cmd, timeout=300)
                 if rc == 0:
                     log(f"  ✓ {name} uninstalled via Chocolatey.")
-                    return True
-                else:
-                    log(f"  ⚠ choco uninstall failed: {err}")
-        log(f"  ⚠ No automatic uninstall command found for {name} on Windows.")
-        return False
+                    cmd_success = True
+
+        # 3. NPM global package
+        if "npm install -g" in cmd:
+            parts = cmd.split("npm install -g")
+            if len(parts) > 1:
+                pkg = parts[1].strip().split()[0]
+                uninst_cmd = f"npm uninstall -g {pkg}"
+                rc, out, err = run_command(uninst_cmd, timeout=120)
+                if rc == 0:
+                    log(f"  ✓ {name} uninstalled via npm.")
+                    cmd_success = True
+
+        # 4. Pip package
+        if "pip install" in cmd:
+            parts = cmd.split("pip install")
+            if len(parts) > 1:
+                pkg = parts[1].strip().split()[0]
+                uninst_cmd = f"python -m pip uninstall -y {pkg}"
+                rc, out, err = run_command(uninst_cmd, timeout=120)
+                if rc == 0:
+                    log(f"  ✓ {name} uninstalled via pip.")
+                    cmd_success = True
+
+        # 5. Cargo package
+        if "cargo install" in cmd:
+            parts = cmd.split("cargo install")
+            if len(parts) > 1:
+                pkg = parts[1].strip().split()[0]
+                uninst_cmd = f"cargo uninstall {pkg}"
+                rc, out, err = run_command(uninst_cmd, timeout=120)
+                if rc == 0:
+                    log(f"  ✓ {name} uninstalled via cargo.")
+                    cmd_success = True
+
+        # 6. Dotnet tool
+        if "dotnet tool install" in cmd:
+            parts = cmd.split("dotnet tool install")
+            if len(parts) > 1:
+                pkg = parts[1].replace("-g", "").strip().split()[0]
+                uninst_cmd = f"dotnet tool uninstall -g {pkg}"
+                rc, out, err = run_command(uninst_cmd, timeout=120)
+                if rc == 0:
+                    log(f"  ✓ {name} uninstalled via dotnet.")
+                    cmd_success = True
 
     elif is_linux():
         cmd = tool.get("install_command_linux", "")
         if "apt" in cmd or "apt-get" in cmd:
             parts = cmd.split()
             pkg = parts[-1]
-            rc, out, err = run_command(f"sudo apt-get remove -y {pkg}", timeout=300)
-            return rc == 0
+            rc, out, err = run_command(f"sudo apt-get purge -y {pkg}", timeout=300)
+            cmd_success = (rc == 0)
         elif "pacman" in cmd:
             parts = cmd.split()
             pkg = parts[-1]
-            rc, out, err = run_command(f"sudo pacman -R --noconfirm {pkg}", timeout=300)
-            return rc == 0
+            rc, out, err = run_command(f"sudo pacman -Rns --noconfirm {pkg}", timeout=300)
+            cmd_success = (rc == 0)
         elif "dnf" in cmd:
             parts = cmd.split()
             pkg = parts[-1]
             rc, out, err = run_command(f"sudo dnf remove -y {pkg}", timeout=300)
-            return rc == 0
+            cmd_success = (rc == 0)
+        elif "pip install" in cmd:
+            parts = cmd.split("pip install")
+            if len(parts) > 1:
+                pkg = parts[1].strip().split()[0]
+                rc, _, _ = run_command(f"pip uninstall -y {pkg}", timeout=120)
+                cmd_success = (rc == 0)
+        elif "npm install -g" in cmd:
+            parts = cmd.split("npm install -g")
+            if len(parts) > 1:
+                pkg = parts[1].strip().split()[0]
+                rc, _, _ = run_command(f"npm uninstall -g {pkg}", timeout=120)
+                cmd_success = (rc == 0)
+        elif "cargo install" in cmd:
+            parts = cmd.split("cargo install")
+            if len(parts) > 1:
+                pkg = parts[1].strip().split()[0]
+                rc, _, _ = run_command(f"cargo uninstall {pkg}", timeout=120)
+                cmd_success = (rc == 0)
 
     elif is_mac():
         cmd = tool.get("install_command_mac", "")
@@ -199,9 +377,41 @@ def uninstall_tool(tool: dict) -> bool:
             parts = cmd.split()
             pkg = parts[-1]
             rc, out, err = run_command(f"brew uninstall {pkg}", timeout=300)
-            return rc == 0
+            cmd_success = (rc == 0)
+        elif "pip install" in cmd:
+            parts = cmd.split("pip install")
+            if len(parts) > 1:
+                pkg = parts[1].strip().split()[0]
+                rc, _, _ = run_command(f"pip uninstall -y {pkg}", timeout=120)
+                cmd_success = (rc == 0)
+        elif "npm install -g" in cmd:
+            parts = cmd.split("npm install -g")
+            if len(parts) > 1:
+                pkg = parts[1].strip().split()[0]
+                rc, _, _ = run_command(f"npm uninstall -g {pkg}", timeout=120)
+                cmd_success = (rc == 0)
+        elif "cargo install" in cmd:
+            parts = cmd.split("cargo install")
+            if len(parts) > 1:
+                pkg = parts[1].strip().split()[0]
+                rc, _, _ = run_command(f"cargo uninstall {pkg}", timeout=120)
+                cmd_success = (rc == 0)
 
-    return False
+    # Perform deep clean of user PATH entries, shortcuts, and leftover files
+    _clean_tool_paths(tool)
+    _clean_tool_shortcuts(tool)
+    _clean_tool_residuals(tool)
+
+    # Verification: check if tool is still detected
+    if not detect_tool(tool):
+        log(f"  ✓ {name} completely uninstalled and removed from system.")
+        return True
+    elif cmd_success:
+        log(f"  ✓ {name} uninstalled (command completed).")
+        return True
+    else:
+        log(f"  ⚠ Could not completely remove {name}.")
+        return False
 
 
 def can_uninstall(tool: dict) -> bool:
@@ -211,13 +421,32 @@ def can_uninstall(tool: dict) -> bool:
         return True
     if is_windows():
         cmd = tool.get("install_command_windows", "")
-        return "winget install" in cmd or "choco install" in cmd
+        return any(mgr in cmd for mgr in (
+            "winget install",
+            "choco install",
+            "npm install -g",
+            "pip install",
+            "cargo install",
+            "dotnet tool install",
+        ))
     elif is_linux():
         cmd = tool.get("install_command_linux", "")
-        return any(mgr in cmd for mgr in ("apt", "pacman", "dnf"))
+        return any(mgr in cmd for mgr in (
+            "apt",
+            "pacman",
+            "dnf",
+            "pip install",
+            "npm install -g",
+            "cargo install",
+        ))
     elif is_mac():
         cmd = tool.get("install_command_mac", "")
-        return "brew install" in cmd
+        return any(mgr in cmd for mgr in (
+            "brew install",
+            "pip install",
+            "npm install -g",
+            "cargo install",
+        ))
     return False
 
 

@@ -239,10 +239,19 @@ class UpdateDialog(QDialog):
             pass
         self.later_btn.clicked.connect(self._on_cancel_download)
 
-        # Prepare destination file
+        # Prepare destination file safely avoiding lock conflicts
+        import time
         asset_name = self.release_info.get("asset_name") or "UniversalDevManager_update.exe"
         temp_dir = Path(tempfile.gettempdir()) / "devinstaller_updates"
-        self.download_path = str(temp_dir / asset_name)
+        temp_dir.mkdir(parents=True, exist_ok=True)
+        dest_candidate = temp_dir / asset_name
+        try:
+            if dest_candidate.exists():
+                with open(dest_candidate, "a+b"):
+                    pass
+        except OSError:
+            dest_candidate = temp_dir / f"update_{int(time.time())}_{asset_name}"
+        self.download_path = str(dest_candidate)
 
         # Start download thread
         self.download_worker = UpdateDownloadWorker(download_url, self.download_path, self)
@@ -252,14 +261,14 @@ class UpdateDialog(QDialog):
         self.download_worker.start()
 
     def _on_download_progress(self, percent: int) -> None:
-        target_val = max(1, percent)
+        target_val = max(1, min(100, percent))
         self._prog_anim = QPropertyAnimation(self.progress_bar, b"value")
         self._prog_anim.setDuration(180)
         self._prog_anim.setStartValue(self.progress_bar.value())
         self._prog_anim.setEndValue(target_val)
         self._prog_anim.setEasingCurve(QEasingCurve.Type.OutQuad)
         self._prog_anim.start()
-        self.percent_lbl.setText(f"{percent}%")
+        self.percent_lbl.setText(f"{target_val}%")
 
     def _on_download_finished(self, filepath: str) -> None:
         self.status_lbl.setText("Applying update, restarting...")
@@ -286,7 +295,8 @@ class UpdateDialog(QDialog):
         self.update_btn.setEnabled(True)
         self.update_btn.setVisible(True)
         self.update_btn.disconnect()
-        self.update_btn.clicked.connect(lambda: [webbrowser.open(self.release_info.get("html_url")), self.accept()])
+        import webbrowser
+        self.update_btn.clicked.connect(lambda: [webbrowser.open(self.release_info.get("html_url") or "https://github.com"), self.accept()])
         
         self.later_btn.setText("Close")
         self.later_btn.setEnabled(True)
@@ -295,8 +305,9 @@ class UpdateDialog(QDialog):
 
     def _on_cancel_download(self) -> None:
         if self.download_worker and self.download_worker.isRunning():
-            self.download_worker.terminate()
-            self.download_worker.wait()
+            if hasattr(self.download_worker, "cancel"):
+                self.download_worker.cancel()
+            self.download_worker.wait(1500)
         self.reject()
 
     def _launch_installer(self, filepath: str) -> None:
@@ -306,17 +317,24 @@ class UpdateDialog(QDialog):
         if sys.platform == "win32":
             if is_frozen:
                 pid = os.getpid()
-                # powershell script to wait for this process to exit, copy downloaded file, and start it
+                # PowerShell script to wait for this process to exit, copy downloaded file with retries, and start it
+                ps_script = (
+                    f"$proc = Get-Process -Id {pid} -ErrorAction SilentlyContinue; "
+                    f"if ($proc) {{ $proc | Wait-Process -Timeout 15 }}; "
+                    f"Start-Sleep -Milliseconds 600; "
+                    f"for ($i=0; $i -lt 8; $i++) {{ "
+                    f"  try {{ Copy-Item -Path '{filepath}' -Destination '{current_exe}' -Force -ErrorAction Stop; break }} "
+                    f"  catch {{ Start-Sleep -Milliseconds 500 }} "
+                    f"}}; "
+                    f"Start-Process -FilePath '{current_exe}';"
+                )
                 cmd = [
                     "powershell",
                     "-NoProfile",
                     "-WindowStyle",
                     "Hidden",
                     "-Command",
-                    f"$proc = Get-Process -Id {pid} -ErrorAction SilentlyContinue; "
-                    f"if ($proc) {{ $proc | Wait-Process }}; "
-                    f"Copy-Item -Path '{filepath}' -Destination '{current_exe}' -Force; "
-                    f"Start-Process -FilePath '{current_exe}';",
+                    ps_script,
                 ]
                 subprocess.Popen(cmd, creationflags=subprocess.CREATE_NO_WINDOW)
             else:

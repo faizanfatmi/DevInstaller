@@ -163,3 +163,98 @@ def add_to_path(raw_directory: str) -> bool:
             return False
 
     return False
+
+
+def remove_from_path(raw_directory: str) -> bool:
+    """Remove *raw_directory* from the user PATH.
+
+    Square-mode:
+      Windows -> HKCU\\Environment (never touches HKLM)
+      Linux   -> ~/.bashrc
+      macOS   -> ~/.zshrc
+
+    Returns True on success or when the directory was not present.
+    """
+    if not raw_directory or not raw_directory.strip():
+        return True
+
+    expanded = os.path.normpath(os.path.expanduser(os.path.expandvars(raw_directory.strip())))
+    resolved = resolve_env_path(raw_directory) or expanded
+
+    targets = {
+        raw_directory.strip().rstrip("\\/").lower(),
+        expanded.rstrip("\\/").lower(),
+        resolved.rstrip("\\/").lower(),
+    }
+
+    if is_windows():
+        current = _windows_get_user_path()
+        if not current:
+            return True
+
+        entries = [e.strip() for e in current.split(";") if e.strip()]
+        new_entries = []
+        removed = False
+
+        for entry in entries:
+            norm_entry = os.path.normpath(entry).rstrip("\\/").lower()
+            if norm_entry in targets:
+                removed = True
+                logger.info(f"Removing from Windows user PATH: {entry}")
+            else:
+                new_entries.append(entry)
+
+        if removed:
+            return _windows_set_user_path(";".join(new_entries))
+        return True
+
+    elif is_linux():
+        rc_file = Path.home() / ".bashrc"
+        if not rc_file.exists():
+            return True
+
+        try:
+            lines = rc_file.read_text(encoding="utf-8").splitlines(keepends=True)
+            new_lines = []
+            removed = False
+
+            for line in lines:
+                if any(t in line.lower() for t in targets) and "export path=" in line.lower():
+                    removed = True
+                    logger.info(f"Removing from ~/.bashrc: {line.strip()}")
+                else:
+                    new_lines.append(line)
+
+            if removed:
+                rc_file.write_text("".join(new_lines), encoding="utf-8")
+            return True
+        except Exception as exc:
+            logger.error(f"Failed to clean ~/.bashrc: {exc}")
+            return False
+
+    elif is_mac():
+        rc_file = Path.home() / ".zshrc"
+        if not rc_file.exists():
+            return True
+
+        try:
+            lines = rc_file.read_text(encoding="utf-8").splitlines(keepends=True)
+            new_lines = []
+            removed = False
+
+            for line in lines:
+                if any(t in line.lower() for t in targets) and "export path=" in line.lower():
+                    removed = True
+                    logger.info(f"Removing from ~/.zshrc: {line.strip()}")
+                else:
+                    new_lines.append(line)
+
+            if removed:
+                rc_file.write_text("".join(new_lines), encoding="utf-8")
+            return True
+        except Exception as exc:
+            logger.error(f"Failed to clean ~/.zshrc: {exc}")
+            return False
+
+    return False
+

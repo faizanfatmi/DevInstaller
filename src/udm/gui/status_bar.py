@@ -78,27 +78,41 @@ class StatusBar(QWidget):
 
         layout.addStretch()
 
-        # Hidden progress bar for installation (only visible during install)
+        # Progress container for installation/downloading (visible during active progress)
         self.progress_bar = QProgressBar()
         self.progress_bar.setRange(0, 100)
         self.progress_bar.setValue(0)
         self.progress_bar.setTextVisible(False)
-        self.progress_bar.setFixedHeight(3)
-        self.progress_bar.setFixedWidth(200)
+        self.progress_bar.setFixedHeight(6)
+        self.progress_bar.setFixedWidth(160)
         self.progress_bar.setVisible(False)
         self.progress_bar.setStyleSheet(f"""
             QProgressBar {{
                 background-color: {PROGRESS_BG};
-                border: none;
-                border-radius: 1px;
-                max-height: 3px;
+                border: 1px solid {BORDER};
+                border-radius: 3px;
+                max-height: 6px;
             }}
             QProgressBar::chunk {{
-                background-color: #6fdd78;
-                border-radius: 1px;
+                background: qlineargradient(x1:0, y1:0, x2:1, y2:0,
+                    stop:0 #4ade80, stop:1 #22c55e);
+                border-radius: 2px;
             }}
         """)
         layout.addWidget(self.progress_bar)
+
+        # Percentage label next to progress bar
+        self.percent_label = QLabel("0%")
+        self.percent_label.setStyleSheet("""
+            color: #4ade80;
+            font-size: 11px;
+            font-weight: 700;
+            background: transparent;
+            padding-left: 2px;
+            padding-right: 6px;
+        """)
+        self.percent_label.setVisible(False)
+        layout.addWidget(self.percent_label)
 
         # Smoothly animate value changes instead of snapping.
         self._progress_anim = QPropertyAnimation(self.progress_bar, b"value")
@@ -131,9 +145,13 @@ class StatusBar(QWidget):
         self.package_count_label.setText(f"{count} packages available")
 
     def set_progress(self, value: int):
-        """Animate the progress bar towards *value* for a smoother feel."""
+        """Animate the progress bar towards *value* and update the percentage label."""
         value = max(0, min(100, int(value)))
-        self.progress_bar.setVisible(value > 0 and value < 100)
+        is_active = (0 < value < 100)
+        self.progress_bar.setVisible(is_active)
+        self.percent_label.setVisible(is_active)
+        if is_active:
+            self.percent_label.setText(f"{value}%")
         self._progress_anim.stop()
         self._progress_anim.setStartValue(self.progress_bar.value())
         self._progress_anim.setEndValue(value)

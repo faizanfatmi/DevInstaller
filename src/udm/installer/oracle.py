@@ -550,36 +550,32 @@ def _find_sqldeveloper_exe(base_dir: str) -> str | None:
 
 
 def _download_sql_developer(url: str, dest_zip: str) -> bool:
-    """Download SQL Developer archive with user-agent and progress logging."""
-    log("  Downloading Oracle SQL Developer (~500 MB)…")
+    """Download SQL Developer archive with parallel multi-threading and progress logging."""
+    from udm.downloader import download_file_parallel
+    log("  Downloading Oracle SQL Developer (~500 MB) via parallel chunk downloader…")
     log(f"  Source: {url}")
-    log("  This may take a few minutes depending on your internet connection.")
+    log("  Using 4-thread parallel byte-range streams for maximum download speed.")
+    
+    last_log_pct = [-10]
+
+    def _progress_cb(pct: int, downloaded: int, total: int):
+        mb_down = downloaded // (1024 * 1024)
+        mb_total = total // (1024 * 1024) if total > 0 else 0
+        if pct >= last_log_pct[0] + 10:
+            log(f"    Parallel download: {pct}% ({mb_down} MB / {mb_total} MB)…")
+            last_log_pct[0] = pct
+        notify("Oracle SQL Developer", f"Downloading {pct}% ({mb_down}/{mb_total} MB)", pct)
+
     try:
-        import urllib.request
-        headers = {
-            "User-Agent": (
-                "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
-                "AppleWebKit/537.36 (KHTML, like Gecko) "
-                "Chrome/120.0.0.0 Safari/537.36"
-            )
-        }
-        req = urllib.request.Request(url, headers=headers)
-        with urllib.request.urlopen(req, timeout=3600) as response, open(dest_zip, "wb") as out_file:
-            total_size = int(response.headers.get("Content-Length", 0))
-            chunk_size = 2 * 1024 * 1024  # 2MB chunks
-            downloaded = 0
-            last_pct = 0
-            while True:
-                chunk = response.read(chunk_size)
-                if not chunk:
-                    break
-                out_file.write(chunk)
-                downloaded += len(chunk)
-                if total_size > 0:
-                    pct = int(downloaded * 100 / total_size)
-                    if pct >= last_pct + 10:
-                        log(f"    Downloaded {pct}% ({downloaded // (1024 * 1024)} MB / {total_size // (1024 * 1024)} MB)…")
-                        last_pct = pct
+        success = download_file_parallel(
+            url=url,
+            dest_path=dest_zip,
+            progress_callback=_progress_cb,
+            num_threads=4,
+        )
+        if not success:
+            log("  ✗ Parallel download failed.")
+            return False
 
         if os.path.isfile(dest_zip) and os.path.getsize(dest_zip) > 10 * 1024 * 1024:
             with open(dest_zip, "rb") as f:

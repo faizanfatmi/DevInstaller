@@ -107,7 +107,7 @@ class UpdateCheckWorker(QThread):
 
 
 class UpdateDownloadWorker(QThread):
-    """Background worker to download the update asset chunk-by-chunk.
+    """Background worker to download the update asset using parallel chunk downloading.
 
     Signals
     -------
@@ -127,30 +127,35 @@ class UpdateDownloadWorker(QThread):
         super().__init__(parent)
         self.url = url
         self.dest_path = dest_path
+        import threading
+        self._cancel_event = threading.Event()
+
+    def cancel(self) -> None:
+        """Signal cancellation cleanly."""
+        self._cancel_event.set()
 
     def run(self) -> None:
         try:
-            req = urllib.request.Request(self.url, headers={"User-Agent": "devinstaller"})
-            with urllib.request.urlopen(req, timeout=20) as response:
-                total_size = int(response.info().get("Content-Length", 0))
-                block_size = 65536  # 64KB blocks
-                downloaded = 0
+            from udm.downloader import download_file_parallel
 
-                from pathlib import Path
-                Path(self.dest_path).parent.mkdir(parents=True, exist_ok=True)
+            def _on_progress(pct: int, downloaded: int, total: int):
+                self.progress.emit(pct)
 
-                with open(self.dest_path, "wb") as f:
-                    while True:
-                        buffer = response.read(block_size)
-                        if not buffer:
-                            break
-                        f.write(buffer)
-                        downloaded += len(buffer)
-                        if total_size:
-                            percent = int(downloaded * 100 / total_size)
-                            self.progress.emit(percent)
+            success = download_file_parallel(
+                url=self.url,
+                dest_path=self.dest_path,
+                progress_callback=_on_progress,
+                num_threads=4,
+                cancel_event=self._cancel_event,
+            )
 
+            if self._cancel_event.is_set():
+                return
+
+            if success:
                 self.finished.emit(self.dest_path)
+            else:
+                self.error.emit("Download failed or was corrupted")
         except Exception as e:
             logger.exception("Failed to download update")
             self.error.emit(str(e))

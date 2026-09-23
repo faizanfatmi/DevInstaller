@@ -17,7 +17,7 @@ from udm.platform.detect import (
     linux_distro_name,
     os_label,
 )
-from udm.platform.path import add_to_path, resolve_env_path
+from udm.platform.path import add_to_path, remove_from_path, resolve_env_path
 from udm.platform.privilege import (
     classify_pkexec_result,
     friendly_pkexec_message,
@@ -37,6 +37,7 @@ __all__ = [
     "is_admin",
     "request_admin",
     "add_to_path",
+    "remove_from_path",
     "resolve_env_path",
     "run_command",
     "run_privileged_command",
