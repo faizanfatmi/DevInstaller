@@ -173,7 +173,7 @@ def test_install_sql_developer_download_flow(tmp_path):
 
     dest_dir = tmp_path / "installed_sqld"
 
-    def fake_download(url, dest_zip):
+    def fake_download(url, dest_zip, progress_cb=None):
         with zipfile.ZipFile(dest_zip, "w") as zf:
             zf.writestr("sqldeveloper.exe", "fake binary")
         return True

@@ -116,9 +116,10 @@ class StatusBar(QWidget):
         self.percent_label.setVisible(False)
         layout.addWidget(self.percent_label)
 
-        # Smoothly animate value changes instead of snapping.
+        # Smoothly animate value changes instead of snapping. Kept short so the
+        # frequent live-progress updates during an install don't visibly lag.
         self._progress_anim = QPropertyAnimation(self.progress_bar, b"value")
-        self._progress_anim.setDuration(280)
+        self._progress_anim.setDuration(140)
         self._progress_anim.setEasingCurve(QEasingCurve.Type.OutCubic)
 
         # Status text (hidden by default, shown during install)

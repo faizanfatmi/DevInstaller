@@ -215,7 +215,7 @@
     "description": "Rewrite of NASM assembler with AT&T syntax",
     "category": "Compilers",
     "detect_cmd": "yasm --version",
-    "install_command_windows": "winget install --id TortoiseSVN.TortoiseSVN -e --silent --accept-source-agreements",
+    "install_command_windows": "choco install yasm -y",
     "install_command_linux": "sudo apt-get install -y yasm",
     "install_command_mac": "brew install yasm",
     "path_required": false
@@ -225,8 +225,8 @@
     "name": "FASM",
     "description": "Flat Assembler — fast x86/x64 assembler",
     "category": "Compilers",
-    "detect_cmd": "fasm",
-    "install_command_windows": "winget install -e --id FlatAssembler.FASM --silent --accept-source-agreements",
+    "detect_cmd": "where fasm",
+    "install_command_windows": "winget install --id FlatAssembler.FASM -e --silent --accept-source-agreements --accept-package-agreements",
     "install_command_linux": "sudo apt-get install -y fasm",
     "install_command_mac": "",
     "path_required": false
@@ -479,7 +479,7 @@
     "description": "JVM-based functional/OOP language",
     "category": "Languages",
     "detect_cmd": "scala -version",
-    "install_command_windows": "winget install --id Scala.Scala.3 -e --silent --accept-source-agreements --accept-package-agreements",
+    "install_command_windows": "winget install --id Scala.Scala.2 -e --silent --accept-source-agreements --accept-package-agreements",
     "install_command_linux": "sudo apt-get install -y scala",
     "install_command_mac": "brew install scala",
     "path_dirs_windows": [
@@ -536,7 +536,8 @@
     "install_command_linux": "sudo apt-get install -y swift",
     "install_command_mac": "xcode-select --install",
     "path_dirs_windows": [
-      "C:\\Library\\Developer\\Toolchains\\unknown-Asserts-development.xctoolchain\\usr\\bin"
+      "%LOCALAPPDATA%\\Programs\\Swift\\Toolchains\\*\\usr\\bin",
+      "C:\\Program Files\\Swift\\Toolchains\\*\\usr\\bin"
     ],
     "path_required": true
   },
@@ -636,7 +637,7 @@
     "description": "Just-In-Time compiler for Lua — extremely fast",
     "category": "Compilers",
     "detect_cmd": "luajit -v",
-    "install_command_windows": "winget install --id Lua.Lua -e --silent --accept-source-agreements --accept-package-agreements",
+    "install_command_windows": "winget install --id DEVCOM.LuaJIT -e --silent --accept-source-agreements --accept-package-agreements",
     "install_command_linux": "sudo apt-get install -y luajit",
     "install_command_mac": "brew install luajit",
     "path_required": false
@@ -733,7 +734,7 @@
     "description": "Low-level systems language — C/C++ alternative",
     "category": "Languages",
     "detect_cmd": "zig version",
-    "install_command_windows": "winget install --id zig-lang.zig -e --silent --accept-source-agreements --accept-package-agreements",
+    "install_command_windows": "winget install --id zig.zig -e --silent --accept-source-agreements --accept-package-agreements",
     "install_command_linux": "sudo snap install zig --classic --beta",
     "install_command_mac": "brew install zig",
     "path_dirs_windows": [
@@ -762,7 +763,7 @@
     "description": "Ruby-like compiled systems language",
     "category": "Languages",
     "detect_cmd": "crystal --version",
-    "install_command_windows": "winget install -e --id Crystal.Crystal --accept-source-agreements",
+    "install_command_windows": "winget install --id Crystal.Crystal -e --silent --accept-source-agreements --accept-package-agreements",
     "install_command_linux": "sudo apt-get install -y crystal",
     "install_command_mac": "brew install crystal",
     "path_required": false
@@ -824,7 +825,7 @@
     "description": "Open-source COBOL compiler",
     "category": "Compilers",
     "detect_cmd": "cobc --version",
-    "install_command_windows": "winget install -e --id OpenCobolIDE.OpenCobolIDE --accept-source-agreements --accept-package-agreements",
+    "install_command_windows": "winget install --id OpenCobolIDE.OpenCobolIDE -e --silent --accept-source-agreements --accept-package-agreements",
     "install_command_linux": "sudo apt-get install -y gnucobol",
     "install_command_mac": "brew install gnucobol",
     "path_required": false
@@ -835,7 +836,7 @@
     "description": "Ada compiler from the GCC suite",
     "category": "Compilers",
     "detect_cmd": "gnat --version",
-    "install_command_windows": "winget install --id GNAT.GNATCommunity -e --silent --accept-source-agreements",
+    "install_command_windows": "winget install --id GNAT.GNATCommunity -e --silent --accept-source-agreements --accept-package-agreements",
     "install_command_linux": "sudo apt-get install -y gnat",
     "install_command_mac": "brew install gnat",
     "path_required": false
@@ -874,7 +875,7 @@
     "description": "Classic Scheme implementation for education",
     "category": "Languages",
     "detect_cmd": "mit-scheme --version",
-    "install_command_windows": "winget install --id MIT.GNU.Scheme -e --silent --accept-source-agreements",
+    "install_command_windows": "winget install --id MIT.GNU.Scheme -e --silent --accept-source-agreements --accept-package-agreements",
     "install_command_linux": "sudo apt-get install -y mit-scheme",
     "install_command_mac": "brew install mit-scheme",
     "path_required": false
@@ -1434,7 +1435,7 @@
     "description": "Memory debugging and profiling tool",
     "category": "DevOps & Tools",
     "detect_cmd": "valgrind --version",
-    "install_command_windows": "wsl --install",
+    "install_command_windows": "",
     "install_command_linux": "sudo apt-get install -y valgrind",
     "install_command_mac": "brew install valgrind",
     "path_required": false

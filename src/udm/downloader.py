@@ -26,6 +26,11 @@ _DEFAULT_USER_AGENT = (
     "Chrome/120.0.0.0 Safari/537.36 DevInstaller"
 )
 
+# Sent on every request: disabling transparent compression keeps Content-Length
+# and byte-range math exact (a gzipped response would report a different length
+# than the bytes we seek/write, corrupting parallel chunk assembly).
+_BASE_HEADERS = {"User-Agent": _DEFAULT_USER_AGENT, "Accept-Encoding": "identity"}
+
 
 def _probe_url(url: str, custom_headers: dict | None = None) -> tuple[int, bool]:
     """Probe the remote URL to check Content-Length and byte-range support.
@@ -33,7 +38,7 @@ def _probe_url(url: str, custom_headers: dict | None = None) -> tuple[int, bool]
     Returns:
         (total_size_in_bytes, supports_byte_ranges)
     """
-    req_headers = {"User-Agent": _DEFAULT_USER_AGENT, "Range": "bytes=0-0"}
+    req_headers = {**_BASE_HEADERS, "Range": "bytes=0-0"}
     if custom_headers:
         req_headers.update(custom_headers)
 
@@ -56,7 +61,7 @@ def _probe_url(url: str, custom_headers: dict | None = None) -> tuple[int, bool]
 
     # Fallback to standard HEAD/GET probe
     try:
-        head_headers = {"User-Agent": _DEFAULT_USER_AGENT}
+        head_headers = dict(_BASE_HEADERS)
         if custom_headers:
             head_headers.update(custom_headers)
         req = urllib.request.Request(url, headers=head_headers)
@@ -83,7 +88,7 @@ def _download_chunk(
 ) -> bool:
     """Download a specific byte range directly into the pre-allocated file."""
     headers = {
-        "User-Agent": _DEFAULT_USER_AGENT,
+        **_BASE_HEADERS,
         "Range": f"bytes={start}-{end}",
     }
     if custom_headers:
@@ -134,7 +139,7 @@ def _download_single_stream(
     block_size: int = 65536,
 ) -> bool:
     """Fallback single-stream sequential download with progress reporting."""
-    headers = {"User-Agent": _DEFAULT_USER_AGENT}
+    headers = dict(_BASE_HEADERS)
     if custom_headers:
         headers.update(custom_headers)
 
@@ -190,7 +195,7 @@ def download_file_parallel(
     url: str,
     dest_path: str,
     progress_callback: Optional[Callable[[int, int, int], None]] = None,
-    num_threads: int = 4,
+    num_threads: int = 8,
     cancel_event: Optional[threading.Event] = None,
     custom_headers: dict | None = None,
 ) -> bool:
@@ -200,7 +205,7 @@ def download_file_parallel(
         url: Direct download URL.
         dest_path: Absolute destination path for the saved file.
         progress_callback: Callback receiving (percent, downloaded_bytes, total_bytes).
-        num_threads: Number of parallel range download workers (default 4).
+        num_threads: Number of parallel range download workers (default 8).
         cancel_event: Optional threading.Event to signal cancellation.
         custom_headers: Optional HTTP headers dict.
 

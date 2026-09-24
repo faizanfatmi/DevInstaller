@@ -2,6 +2,8 @@
 
 import os
 import subprocess
+import threading
+from typing import Callable, Optional
 
 from udm.logger import logger
 from udm.platform.detect import is_linux, is_windows
@@ -38,6 +40,97 @@ def run_command(
     except Exception as e:
         logger.error(f"Command failed: {cmd} — {e}")
         return -1, "", str(e)
+
+
+def run_command_streamed(
+    cmd: str | list[str],
+    on_output: Optional[Callable[[str], None]] = None,
+    shell: bool = True,
+    timeout: int = 900,
+) -> tuple[int, str, str]:
+    """Run a command, streaming its output live to *on_output* segment by segment.
+
+    Package managers (winget, choco, pip) redraw progress in place using carriage
+    returns rather than newlines, so the reader splits on both ``\\n`` and ``\\r``.
+    stderr is merged into stdout so a single stream carries everything.
+
+    Returns ``(returncode, full_output, "")`` — the third element is always empty
+    since stderr is folded into stdout, matching the ``run_command`` tuple shape.
+    A timeout kills the process and returns ``(-1, partial_output, "timed out")``.
+    """
+    if isinstance(cmd, list):
+        shell = False
+
+    popen_kwargs: dict = dict(
+        stdout=subprocess.PIPE,
+        stderr=subprocess.STDOUT,
+        shell=shell,
+        bufsize=0,
+    )
+    if is_windows():
+        popen_kwargs["creationflags"] = subprocess.CREATE_NO_WINDOW
+
+    try:
+        proc = subprocess.Popen(cmd, **popen_kwargs)
+    except Exception as e:
+        logger.error(f"Command failed to start: {cmd} — {e}")
+        return -1, "", str(e)
+
+    collected: list[str] = []
+    timed_out = threading.Event()
+
+    # subprocess.Popen has no built-in timeout for streaming reads; a timer
+    # thread kills the process if it overruns.
+    timer = threading.Timer(timeout, _kill, args=(proc, timed_out))
+    timer.daemon = True
+    timer.start()
+
+    buffer = ""
+    try:
+        stream = proc.stdout
+        while True:
+            chunk = stream.read(1024) if stream else b""
+            if not chunk:
+                break
+            text = chunk.decode(errors="replace")
+            buffer += text
+            # Split on both newline and carriage return so in-place progress
+            # redraws are surfaced as they happen.
+            parts = buffer.replace("\r", "\n").split("\n")
+            buffer = parts.pop()  # keep the trailing partial segment
+            for segment in parts:
+                collected.append(segment)
+                if on_output and segment.strip():
+                    try:
+                        on_output(segment)
+                    except Exception:
+                        pass
+        if buffer:
+            collected.append(buffer)
+            if on_output and buffer.strip():
+                try:
+                    on_output(buffer)
+                except Exception:
+                    pass
+        proc.wait()
+    finally:
+        timer.cancel()
+
+    output = "\n".join(collected)
+    if timed_out.is_set():
+        logger.error(f"Command timed out: {cmd}")
+        return -1, output, "Command timed out"
+    return proc.returncode if proc.returncode is not None else -1, output, ""
+
+
+def _kill(proc: "subprocess.Popen", flag: threading.Event) -> None:
+    """Mark a process as timed-out and terminate it (used by the watchdog timer)."""
+    if proc.poll() is None:
+        flag.set()
+        try:
+            proc.kill()
+        except Exception:
+            pass
 
 
 def run_privileged_command(

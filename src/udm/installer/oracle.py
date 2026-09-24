@@ -361,70 +361,56 @@ _SQLDEVELOPER_LINUX_URL = (
 _ORACLE_DEFAULT_PASSWORD = "Oracle123"
 
 
-def install_oracle_db() -> bool:
+def install_oracle_db(progress_cb=None) -> bool:
     """Download and install Oracle Database 21c XE."""
     if is_windows():
-        return _install_oracle_db_windows()
+        return _install_oracle_db_windows(progress_cb=progress_cb)
     elif is_linux():
-        return _install_oracle_db_linux()
+        return _install_oracle_db_linux(progress_cb=progress_cb)
     log("  ⚠ Oracle Database XE is not available on this platform.")
     return False
 
 
-def install_sql_developer(archive_path: str | None = None) -> bool:
+def install_sql_developer(archive_path: str | None = None, progress_cb=None) -> bool:
     """Install Oracle SQL Developer from an archive or path."""
     if is_windows():
-        return _install_sql_developer_windows(archive_path=archive_path)
+        return _install_sql_developer_windows(archive_path=archive_path, progress_cb=progress_cb)
     elif is_linux():
-        return _install_sql_developer_linux(archive_path=archive_path)
+        return _install_sql_developer_linux(archive_path=archive_path, progress_cb=progress_cb)
     log("  ⚠ SQL Developer is not available on this platform.")
     return False
 
 
-def _install_oracle_db_windows() -> bool:
+def _install_oracle_db_windows(progress_cb=None) -> bool:
     """Install Oracle Database 21c XE on Windows via silent installer."""
     import tempfile
+    import zipfile
 
     temp_dir = tempfile.mkdtemp(prefix="oracle_xe_")
     zip_path = os.path.join(temp_dir, "OracleXE213_Win64.zip")
 
-    log("  Downloading Oracle Database 21c XE (~1.8 GB)…")
+    log("  Downloading Oracle Database 21c XE (~1.9 GB) via parallel downloader…")
     log("  This may take several minutes depending on your connection.")
-    rc, out, err = run_command(
-        f'powershell -Command "'
-        f"[Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12; "
-        f"Invoke-WebRequest -Uri '{_ORACLE_XE_WIN_URL}' "
-        f"-OutFile '{zip_path}' -UseBasicParsing"
-        f'"',
-        timeout=3600,
-    )
-    if rc != 0:
-        log(f"  ✗ Download failed: {err}")
+    if not _download_archive(_ORACLE_XE_WIN_URL, zip_path, "Oracle Database XE", progress_cb):
+        log("  ✗ Download failed.")
         _safe_rmtree(temp_dir)
         return False
 
     log("  Extracting Oracle XE installer…")
     extract_dir = os.path.join(temp_dir, "extracted")
-    rc, out, err = run_command(
-        f'powershell -Command "Expand-Archive -Path \'{zip_path}\' '
-        f'-DestinationPath \'{extract_dir}\' -Force"',
-        timeout=600,
-    )
-    if rc != 0:
-        log(f"  ✗ Extraction failed: {err}")
+    try:
+        with zipfile.ZipFile(zip_path, "r") as zf:
+            zf.extractall(extract_dir)
+    except Exception as exc:
+        log(f"  ✗ Extraction failed: {exc}")
         _safe_rmtree(temp_dir)
         return False
 
     # Find setup.exe inside extracted directory
-    setup_patterns = [
-        os.path.join(extract_dir, "**", "setup.exe"),
-    ]
     setup_exe = None
-    for pattern in setup_patterns:
-        matches = glob.glob(pattern, recursive=True)
-        if matches:
-            setup_exe = matches[0]
-            break
+    for match in glob.glob(os.path.join(extract_dir, "**", "setup.exe"), recursive=True):
+        setup_exe = match
+        break
 
     if not setup_exe:
         log("  ✗ Could not find setup.exe in extracted archive.")
@@ -432,6 +418,7 @@ def _install_oracle_db_windows() -> bool:
         return False
 
     log("  Running Oracle XE silent installer (this may take 10-20 minutes)…")
+    notify("Oracle Database XE", "Installing (silent)…", 99)
     # Silent install with password:
     #   /s           = silent mode
     #   /v"..."      = MSI properties
@@ -461,7 +448,7 @@ def _install_oracle_db_windows() -> bool:
     return True
 
 
-def _install_oracle_db_linux() -> bool:
+def _install_oracle_db_linux(progress_cb=None) -> bool:
     """Install Oracle Database 21c XE on Linux."""
     import tempfile
 
@@ -476,13 +463,9 @@ def _install_oracle_db_linux() -> bool:
     temp_dir = tempfile.mkdtemp(prefix="oracle_xe_")
     rpm_path = os.path.join(temp_dir, "oracle-database-xe-21c.rpm")
 
-    log("  Downloading Oracle Database 21c XE (~2.5 GB)…")
-    rc, out, err = run_command(
-        f"curl -L -o '{rpm_path}' '{_ORACLE_XE_LINUX_URL}'",
-        timeout=3600,
-    )
-    if rc != 0:
-        log(f"  ✗ Download failed: {err}")
+    log("  Downloading Oracle Database 21c XE (~2.5 GB) via parallel downloader…")
+    if not _download_archive(_ORACLE_XE_LINUX_URL, rpm_path, "Oracle Database XE", progress_cb):
+        log("  ✗ Download failed.")
         _safe_rmtree(temp_dir)
         return False
 
@@ -549,49 +532,62 @@ def _find_sqldeveloper_exe(base_dir: str) -> str | None:
     return None
 
 
-def _download_sql_developer(url: str, dest_zip: str) -> bool:
-    """Download SQL Developer archive with parallel multi-threading and progress logging."""
+def _download_archive(url: str, dest: str, label: str, progress_cb=None,
+                      num_threads: int = 8) -> bool:
+    """Download *url* to *dest* using the parallel chunk downloader.
+
+    Reports progress to the batch status bar via ``notify`` (and the optional
+    ``progress_cb``), and logs a line every ~10%. Shared by the Oracle DB and
+    SQL Developer installers so both get fast parallel downloads with a live bar.
+    """
     from udm.downloader import download_file_parallel
-    log("  Downloading Oracle SQL Developer (~500 MB) via parallel chunk downloader…")
-    log(f"  Source: {url}")
-    log("  Using 4-thread parallel byte-range streams for maximum download speed.")
-    
+
     last_log_pct = [-10]
 
-    def _progress_cb(pct: int, downloaded: int, total: int):
+    def _cb(pct: int, downloaded: int, total: int):
         mb_down = downloaded // (1024 * 1024)
         mb_total = total // (1024 * 1024) if total > 0 else 0
         if pct >= last_log_pct[0] + 10:
-            log(f"    Parallel download: {pct}% ({mb_down} MB / {mb_total} MB)…")
+            log(f"    Downloading {label}: {pct}% ({mb_down} MB / {mb_total} MB)…")
             last_log_pct[0] = pct
-        notify("Oracle SQL Developer", f"Downloading {pct}% ({mb_down}/{mb_total} MB)", pct)
+        notify(label, f"Downloading {pct}% ({mb_down}/{mb_total} MB)", pct)
+        if progress_cb:
+            try:
+                progress_cb(pct)
+            except Exception:
+                pass
 
     try:
-        success = download_file_parallel(
-            url=url,
-            dest_path=dest_zip,
-            progress_callback=_progress_cb,
-            num_threads=4,
+        return download_file_parallel(
+            url=url, dest_path=dest, progress_callback=_cb, num_threads=num_threads
         )
-        if not success:
-            log("  ✗ Parallel download failed.")
-            return False
-
-        if os.path.isfile(dest_zip) and os.path.getsize(dest_zip) > 10 * 1024 * 1024:
-            with open(dest_zip, "rb") as f:
-                header = f.read(4)
-                if header == b"PK\x03\x04":
-                    log("  ✓ Download complete and archive verified.")
-                    return True
-        log("  ✗ Downloaded file is invalid or incomplete.")
-        return False
     except Exception as exc:
         log(f"  ✗ Download failed: {exc}")
         return False
 
 
+def _download_sql_developer(url: str, dest_zip: str, progress_cb=None) -> bool:
+    """Download SQL Developer archive with parallel multi-threading and progress logging."""
+    log("  Downloading Oracle SQL Developer (~500 MB) via parallel chunk downloader…")
+    log(f"  Source: {url}")
+    log("  Using 8-thread parallel byte-range streams for maximum download speed.")
+
+    if not _download_archive(url, dest_zip, "Oracle SQL Developer", progress_cb, num_threads=8):
+        log("  ✗ Parallel download failed.")
+        return False
+
+    if os.path.isfile(dest_zip) and os.path.getsize(dest_zip) > 10 * 1024 * 1024:
+        with open(dest_zip, "rb") as f:
+            header = f.read(4)
+            if header == b"PK\x03\x04":
+                log("  ✓ Download complete and archive verified.")
+                return True
+    log("  ✗ Downloaded file is invalid or incomplete.")
+    return False
+
+
 def _find_or_download_sqldeveloper_archive(
-    archive_path: str | None = None, is_win: bool = True
+    archive_path: str | None = None, is_win: bool = True, progress_cb=None
 ) -> tuple[str | None, str | None]:
     """Return (source_path, temp_dir_to_clean)."""
     # 1. Custom provided path
@@ -621,18 +617,20 @@ def _find_or_download_sqldeveloper_archive(
     temp_dir = tempfile.mkdtemp(prefix="sqldeveloper_dl_")
     dest_zip = os.path.join(temp_dir, "sqldeveloper.zip")
     url = _SQLDEVELOPER_WIN_URL if is_win else _SQLDEVELOPER_LINUX_URL
-    if _download_sql_developer(url, dest_zip):
+    if _download_sql_developer(url, dest_zip, progress_cb):
         return (dest_zip, temp_dir)
 
     _safe_rmtree(temp_dir)
     return (None, None)
 
 
-def _install_sql_developer_windows(archive_path: str | None = None) -> bool:
+def _install_sql_developer_windows(archive_path: str | None = None, progress_cb=None) -> bool:
     """Install Oracle SQL Developer on Windows (zip or directory based)."""
     import zipfile
 
-    source_path, temp_dir = _find_or_download_sqldeveloper_archive(archive_path, is_win=True)
+    source_path, temp_dir = _find_or_download_sqldeveloper_archive(
+        archive_path, is_win=True, progress_cb=progress_cb
+    )
     if not source_path:
         return False
 
@@ -686,11 +684,13 @@ def _install_sql_developer_windows(archive_path: str | None = None) -> bool:
             _safe_rmtree(temp_dir)
 
 
-def _install_sql_developer_linux(archive_path: str | None = None) -> bool:
+def _install_sql_developer_linux(archive_path: str | None = None, progress_cb=None) -> bool:
     """Install Oracle SQL Developer on Linux (zip or directory based)."""
     import zipfile
 
-    source_path, temp_dir = _find_or_download_sqldeveloper_archive(archive_path, is_win=False)
+    source_path, temp_dir = _find_or_download_sqldeveloper_archive(
+        archive_path, is_win=False, progress_cb=progress_cb
+    )
     if not source_path:
         return False
 

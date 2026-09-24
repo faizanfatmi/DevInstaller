@@ -1,8 +1,10 @@
 """Batch installation orchestrator with parallel execution.
 
 Tools are installed concurrently using a thread pool so that the overall batch
-completes much faster than the old sequential approach. Progress is tracked
-with a thread-safe counter so the bar still advances smoothly.
+completes much faster than the old sequential approach. Progress is tracked with
+a thread-safe fractional model: each running tool contributes its own live
+download/install percentage, so the status bar advances smoothly *during* an
+install rather than only when a whole tool finishes.
 
 The public ``install_selected`` signature and the ``results`` contract
 (``installed`` / ``already_installed`` / ``failed``) are unchanged, and the
@@ -30,12 +32,80 @@ def _clamp_pct(value: float) -> int:
     return max(0, min(100, int(round(value))))
 
 
+class _Progress:
+    """Thread-safe fractional progress across all tools in a batch.
+
+    ``completed`` counts finished tools; ``active`` maps a still-running tool's
+    key to its own 0..1 fraction. Overall percentage is
+    ``(completed + sum(active)) / total`` so the bar moves as each tool downloads.
+    """
+
+    def __init__(self, total: int) -> None:
+        self._lock = threading.Lock()
+        self._total = max(1, total)
+        self.completed = 0
+        self.active: dict[str, float] = {}
+
+    def _emit(self, name: str, status: str) -> None:
+        pct = _clamp_pct((self.completed + sum(self.active.values())) / self._total * 100)
+        notify(name, status, pct)
+
+    def bump(self, key: str, frac: float, name: str, status: str) -> None:
+        """Raise a tool's fraction (monotonic) and emit the new overall percentage."""
+        with self._lock:
+            self.active[key] = max(self.active.get(key, 0.0), min(0.999, frac))
+            self._emit(name, status)
+
+    def status(self, name: str, status: str) -> None:
+        """Emit *status* without changing any fraction."""
+        with self._lock:
+            self._emit(name, status)
+
+    def finish(self, key: str, name: str, status: str) -> None:
+        """Mark a tool complete: drop its fraction and count it toward the total."""
+        with self._lock:
+            self.active.pop(key, None)
+            self.completed += 1
+            self._emit(name, status)
+
+
+class _Pulse:
+    """Background nudger so the bar keeps creeping even when a backend emits no %.
+
+    Advances a tool's fraction asymptotically toward a ceiling every ``interval``
+    seconds. Real parsed percentages still win because ``bump`` is monotonic.
+    """
+
+    def __init__(self, progress: "_Progress", key: str, name: str,
+                 ceiling: float = 0.95, interval: float = 0.4) -> None:
+        self._progress = progress
+        self._key = key
+        self._name = name
+        self._ceiling = ceiling
+        self._interval = interval
+        self._stop = threading.Event()
+        self._thread = threading.Thread(target=self._run, daemon=True)
+
+    def _run(self) -> None:
+        while not self._stop.wait(self._interval):
+            current = self._progress.active.get(self._key, 0.0)
+            # Move ~12% of the remaining gap toward the ceiling each tick.
+            nxt = current + (self._ceiling - current) * 0.12
+            self._progress.bump(self._key, nxt, self._name, "Downloading and installing…")
+
+    def __enter__(self) -> "_Pulse":
+        self._thread.start()
+        return self
+
+    def __exit__(self, *exc) -> None:
+        self._stop.set()
+
+
 def _install_one(
     tool: dict,
     idx: int,
     total: int,
-    progress_lock: threading.Lock,
-    completed_counter: list[int],
+    progress: "_Progress",
     force: bool = False,
 ) -> tuple[str, str]:
     """Run the full lifecycle (detect → install → PATH → verify) for one tool.
@@ -46,45 +116,41 @@ def _install_one(
     key = tool.get("key", tool["name"])
     name = tool.get("name", key)
 
-    def _progress(status: str) -> None:
-        """Emit a progress notification with the current overall percentage."""
-        with progress_lock:
-            pct = _clamp_pct(completed_counter[0] / total * 100)
-        notify(name, status, pct)
-
     log(f"\n── {name} ({idx + 1}/{total}) ─────────────────")
 
     # ── Stage 1: detection ───────────────────────────────────────────
-    _progress("Checking installation status…")
+    progress.status(name, "Checking installation status…")
     is_present = detect_tool(tool)
     if is_present and not force:
         log(f"  ✓ {name} is already installed. Skipping.")
-        with progress_lock:
-            completed_counter[0] += 1
-        _progress("Already installed  ✓")
+        progress.finish(key, name, "Already installed  ✓")
         return key, "already_installed"
     elif is_present and force:
         log(f"  ℹ {name} detected on system; running installer/update…")
 
-    # ── Stage 2: install ─────────────────────────────────────────────
-    _progress("Downloading and installing…")
+    # ── Stage 2: install (with live per-tool progress) ───────────────
+    progress.bump(key, 0.02, name, "Downloading and installing…")
     log(f"  Installing {name}…")
     try:
-        success = install_tool(tool)
+        with _Pulse(progress, key, name):
+            success = install_tool(
+                tool,
+                progress_cb=lambda p: progress.bump(
+                    key, p / 100.0, name, "Downloading and installing…"
+                ),
+            )
     except Exception as e:
         log(f"  ✗ Exception during install: {e}")
         success = False
 
     if not success:
         log(f"  ✗ Failed to install {name}.")
-        with progress_lock:
-            completed_counter[0] += 1
-        _progress("Failed  ✗")
+        progress.finish(key, name, "Failed  ✗")
         return key, "failed"
 
     # ── Stage 3: PATH configuration ──────────────────────────────────
     if tool.get("path_required", False):
-        _progress("Configuring PATH…")
+        progress.bump(key, 0.97, name, "Configuring PATH…")
         log(f"  Configuring PATH for {name}…")
         try:
             setup_path(tool)
@@ -92,7 +158,7 @@ def _install_one(
             log(f"  ⚠ PATH error: {e}")
 
     # ── Stage 4: verification ────────────────────────────────────────
-    _progress("Verifying installation…")
+    progress.bump(key, 0.99, name, "Verifying installation…")
     verified = True
     if tool.get("detect_cmd"):
         try:
@@ -101,19 +167,16 @@ def _install_one(
             log(f"  ⚠ Verification error: {e}")
             verified = False
 
-    with progress_lock:
-        completed_counter[0] += 1
-
     if verified:
         log(f"  ✓ {name} installed successfully.")
-        _progress("Installed  ✓")
+        progress.finish(key, name, "Installed  ✓")
         return key, "installed"
     else:
         log(
             f"  ⚠ {name} installed but could not be verified "
             "(may need a new shell or PATH refresh)."
         )
-        _progress("Installed (unverified)  ⚠")
+        progress.finish(key, name, "Installed (unverified)  ⚠")
         return key, "installed"
 
 
@@ -161,21 +224,15 @@ def install_selected(
             return results
 
     total = len(normal_tools)
+    progress = _Progress(total)
 
     if total == 1:
-        progress_lock = threading.Lock()
-        completed_counter = [0]
-        key, status = _install_one(normal_tools[0], 0, 1, progress_lock, completed_counter, force=force)
+        key, status = _install_one(normal_tools[0], 0, 1, progress, force=force)
         results[key] = status
         notify("Done", "All tasks complete", 100)
         if on_complete:
             on_complete(results)
         return results
-
-    # Thread-safe progress tracking: completed_counter[0] holds the count of
-    # tools that have finished (regardless of outcome).
-    progress_lock = threading.Lock()
-    completed_counter = [0]
 
     workers = min(MAX_PARALLEL, total)
 
@@ -187,7 +244,7 @@ def install_selected(
     with ThreadPoolExecutor(max_workers=workers) as executor:
         futures = {
             executor.submit(
-                _install_one, tool, idx, total, progress_lock, completed_counter, force
+                _install_one, tool, idx, total, progress, force
             ): tool
             for idx, tool in enumerate(normal_tools)
         }

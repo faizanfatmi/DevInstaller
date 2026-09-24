@@ -37,7 +37,17 @@ def test_windows_commands_present():
     with open(path, "r", encoding="utf-8") as f:
         tools = json.load(f)
 
-    missing_windows = [t["key"] for t in tools if not t.get("install_command_windows")]
+    # Tools with no native Windows build. Rather than ship a misleading command
+    # (e.g. `wsl --install`, which sets up WSL but never installs the tool and
+    # can never satisfy the detect check), these intentionally have no Windows
+    # installer and report honestly in the UI.
+    NO_WINDOWS_INSTALLER = {"valgrind"}
+
+    missing_windows = [
+        t["key"]
+        for t in tools
+        if not t.get("install_command_windows") and t["key"] not in NO_WINDOWS_INSTALLER
+    ]
     assert len(missing_windows) == 0, f"Tools missing Windows install commands: {missing_windows}"
 
 
