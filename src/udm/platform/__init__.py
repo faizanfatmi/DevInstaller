@@ -4,6 +4,7 @@ from udm.platform.admin import is_admin, request_admin
 from udm.platform.command import (
     command_exists,
     run_command,
+    run_command_streamed,
     run_privileged_command,
 )
 from udm.platform.detect import (
@@ -40,6 +41,7 @@ __all__ = [
     "remove_from_path",
     "resolve_env_path",
     "run_command",
+    "run_command_streamed",
     "run_privileged_command",
     "command_exists",
     "pkexec_available",

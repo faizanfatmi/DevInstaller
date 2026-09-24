@@ -33,11 +33,13 @@ from udm.gui.theme import (
     BG_ROW_HOVER,
     BG_WINDOW,
     BORDER,
+    BORDER_ACCENT,
     BORDER_LIGHT,
     FG,
     FG_DIM,
     FG_MUTED,
     GREEN,
+    GREEN_DIM,
 )
 from udm.gui.widgets import ActionButton, PillBadge
 from udm.updater import UpdateDownloadWorker
@@ -63,41 +65,53 @@ class UpdateDialog(QDialog):
 
     def _build_ui(self) -> None:
         root = QVBoxLayout(self)
-        root.setContentsMargins(28, 28, 28, 24)
+        root.setContentsMargins(32, 28, 32, 24)
         root.setSpacing(16)
 
-        # Header Title
-        header_layout = QHBoxLayout()
-        header_layout.setSpacing(14)
+        # ── Header: emerald update glyph in a tinted circle, centered ──
+        badge = QLabel("⬆")
+        badge.setFixedSize(56, 56)
+        badge.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        badge.setStyleSheet(
+            f"background-color: {GREEN_DIM}; color: {GREEN};"
+            f"border: 1px solid {BORDER_ACCENT}; border-radius: 28px;"
+            "font-size: 24px; font-weight: 800;"
+        )
+        badge_row = QHBoxLayout()
+        badge_row.addStretch()
+        badge_row.addWidget(badge)
+        badge_row.addStretch()
+        root.addLayout(badge_row)
 
-        title_layout = QVBoxLayout()
-        title_layout.setSpacing(2)
-        
-        self.title_lbl = QLabel("New Update")
-        self.title_lbl.setStyleSheet(f"color: {FG}; font-size: 18px; font-weight: 700; background: transparent;")
-        title_layout.addWidget(self.title_lbl)
+        self.title_lbl = QLabel("Update Available")
+        self.title_lbl.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.title_lbl.setStyleSheet(f"color: {FG}; font-size: 19px; font-weight: 700; background: transparent;")
+        root.addWidget(self.title_lbl)
 
         self.subtitle_lbl = QLabel("A new version of DevInstaller is ready to install.")
+        self.subtitle_lbl.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.subtitle_lbl.setWordWrap(True)
         self.subtitle_lbl.setStyleSheet(f"color: {FG_DIM}; font-size: 12px; background: transparent;")
-        title_layout.addWidget(self.subtitle_lbl)
+        root.addWidget(self.subtitle_lbl)
 
-        header_layout.addLayout(title_layout)
-        header_layout.addStretch()
-        root.addLayout(header_layout)
-
-        # Version Comparison Row
+        # ── Version comparison card: Installed → Latest ──
         version_widget = QWidget()
-        version_widget.setStyleSheet(f"background-color: {BG_WINDOW}; border: 1px solid {BORDER}; border-radius: 8px;")
+        version_widget.setStyleSheet(
+            f"background-color: {BG_WINDOW}; border: 1px solid {BORDER}; border-radius: 8px;")
         version_layout = QHBoxLayout(version_widget)
         version_layout.setContentsMargins(16, 12, 16, 12)
-        
-        current_badge = PillBadge(f"Installed: {self.current_version}", "default")
-        new_badge = PillBadge(f"Latest: {self.release_info['latest_version']}", "green")
-        
-        version_layout.addWidget(current_badge)
+        version_layout.setSpacing(8)
+
+        current_badge = PillBadge(f"Installed  {self.current_version}", "default")
+        arrow = QLabel("→")
+        arrow.setStyleSheet(f"color: {FG_MUTED}; font-size: 14px; font-weight: 700; background: transparent;")
+        new_badge = PillBadge(f"Latest  {self.release_info['latest_version']}", "green")
+
         version_layout.addStretch()
+        version_layout.addWidget(current_badge)
+        version_layout.addWidget(arrow)
         version_layout.addWidget(new_badge)
-        
+        version_layout.addStretch()
         root.addWidget(version_widget)
 
         # Release Notes Text box
@@ -169,23 +183,8 @@ class UpdateDialog(QDialog):
         self.actions_layout.setSpacing(10)
         self.actions_layout.addStretch()
 
-        # Secondary (Later/Cancel) button
-        self.later_btn = QPushButton("Later")
-        self.later_btn.setStyleSheet(f"""
-            QPushButton {{
-                background-color: {BG_INPUT};
-                color: {FG};
-                border: 1px solid {BORDER};
-                border-radius: 8px;
-                padding: 10px 22px;
-                font-size: 13px;
-                font-weight: 600;
-            }}
-            QPushButton:hover {{
-                background-color: {BG_ROW_HOVER};
-                border-color: {BORDER_LIGHT};
-            }}
-        """)
+        # Secondary (Later/Cancel) button — themed ghost button
+        self.later_btn = ActionButton("Later", "secondary")
         self.later_btn.clicked.connect(self.reject)
         self.actions_layout.addWidget(self.later_btn)
 

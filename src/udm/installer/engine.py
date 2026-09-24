@@ -11,9 +11,11 @@ polkit password dialog is displayed.
 """
 
 import platform
+from typing import Callable, Optional
 
 from udm.installer.callbacks import log
 from udm.installer.distro_packages import translate_apt_command
+from udm.installer.progress import parse_progress
 from udm.installer.prerequisites import (
     ensure_apt_updated,
     ensure_dnf_ready,
@@ -36,6 +38,7 @@ from udm.platform import (
     remove_from_path,
     resolve_env_path,
     run_command,
+    run_command_streamed,
     run_privileged_command,
 )
 
@@ -462,8 +465,65 @@ def _run_linux_prerequisites(cmd: str) -> None:
         ensure_dnf_ready()
 
 
-def install_tool(tool: dict) -> bool:
-    """Install a single tool using the platform install command."""
+def _augment_winget(cmd: str) -> str:
+    """Append ``--disable-interactivity`` to a winget command when missing.
+
+    winget renders a live spinner unless interactivity is disabled; turning it
+    off gives clean, deterministic output when stdout is a pipe (which is how we
+    stream progress) and avoids the occasional hang waiting on a prompt.
+    """
+    if "winget" not in cmd or "--disable-interactivity" in cmd:
+        return cmd
+    return cmd + " --disable-interactivity"
+
+
+# Output signatures that mean "winget could not find/apply this package" — the
+# trigger for the automatic Chocolatey fallback.
+_WINGET_NOTFOUND_MARKERS = (
+    "no package found",
+    "no applicable",
+    "no installed package found",
+    "found in the following sources",  # ambiguous / no exact match
+    "0x8a15000f",
+    "0x8a150014",
+)
+
+
+def _looks_like_winget_notfound(rc: int, combined: str) -> bool:
+    """Return True if a winget run failed because the package wasn't found."""
+    return rc != 0 and any(m in combined for m in _WINGET_NOTFOUND_MARKERS)
+
+
+def _run_install_command(
+    cmd: str,
+    progress_cb: Optional[Callable[[int], None]],
+    timeout: int = 900,
+) -> tuple[int, str, str]:
+    """Run *cmd*, streaming live progress to *progress_cb* when provided.
+
+    Falls back to the plain (buffered) ``run_command`` when no callback is given
+    so existing callers keep identical behaviour.
+    """
+    if progress_cb is None:
+        return run_command(cmd, timeout=timeout)
+
+    last = {"pct": 0}
+
+    def _on_output(segment: str) -> None:
+        pct = parse_progress(segment)
+        if pct is not None and pct >= last["pct"]:
+            last["pct"] = pct
+            progress_cb(pct)
+
+    return run_command_streamed(cmd, on_output=_on_output, timeout=timeout)
+
+
+def install_tool(tool: dict, progress_cb: Optional[Callable[[int], None]] = None) -> bool:
+    """Install a single tool using the platform install command.
+
+    *progress_cb*, when supplied, receives a live 0-100 percentage parsed from the
+    package manager's streamed output. When omitted, behaviour is unchanged.
+    """
     name = tool.get("name", "Unknown")
 
     # Guard against unsupported Linux distributions before doing anything.
@@ -485,10 +545,10 @@ def install_tool(tool: dict) -> bool:
 
         key = tool.get("key", "")
         if key == "oracle_db_xe":
-            return install_oracle_db()
+            return install_oracle_db(progress_cb=progress_cb)
         elif key == "oracle_sql_developer":
             archive_path = tool.get("archive_path")
-            return install_sql_developer(archive_path=archive_path)
+            return install_sql_developer(archive_path=archive_path, progress_cb=progress_cb)
         log(f"  ⚠ Unknown Oracle tool key: {key}")
         return False
 
@@ -515,12 +575,24 @@ def install_tool(tool: dict) -> bool:
             rc, out, err = run_privileged_command(exec_cmd, timeout=900)
         else:
             log(f"  Running: {cmd}")
-            rc, out, err = run_command(cmd, timeout=900)
+            rc, out, err = _run_install_command(cmd, progress_cb, timeout=900)
     else:
-        log(f"  Running: {cmd}")
-        rc, out, err = run_command(cmd, timeout=900)
+        run_cmd = _augment_winget(cmd) if is_windows() else cmd
+        log(f"  Running: {run_cmd}")
+        rc, out, err = _run_install_command(run_cmd, progress_cb, timeout=900)
 
     combined = (out + err).lower()
+
+    # ── Windows: automatic Chocolatey fallback when winget can't find/apply ──
+    if is_windows() and "winget" in cmd and _looks_like_winget_notfound(rc, combined):
+        choco_cmd = translate_winget_to_choco(cmd, tool)
+        if choco_cmd and "winget" not in choco_cmd:
+            log(f"  ℹ winget could not install {name}; falling back to Chocolatey…")
+            ensure_windows_prerequisites()  # installs choco if absent
+            log(f"  Running (fallback): {choco_cmd}")
+            rc, out, err = _run_install_command(choco_cmd, progress_cb, timeout=900)
+            combined = (out + err).lower()
+
     if rc == 0:
         return True
 

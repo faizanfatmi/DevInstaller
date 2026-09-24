@@ -11,12 +11,20 @@ from udm.logger import logger
 
 
 def parse_version(v_str: str) -> tuple[int, ...]:
-    """Parse version string into a comparable tuple of integers (e.g. 'v1.0.2' -> (1, 0, 2))."""
+    """Parse version string into a comparable tuple of integers (e.g. 'v1.0.2' -> (1, 0, 2)).
+
+    Returns ``(0,)`` for empty/garbage input so a malformed release tag can never
+    be mistaken for a newer version and force a spurious update prompt.
+    """
+    if not v_str:
+        return (0,)
     v_str = v_str.strip().lower()
     if v_str.startswith("v"):
         v_str = v_str[1:]
     base = re.split(r"[-+]", v_str)[0]
     digits = re.findall(r"\d+", base)
+    if not digits:
+        return (0,)
     return tuple(int(x) for x in digits)
 
 
@@ -145,7 +153,7 @@ class UpdateDownloadWorker(QThread):
                 url=self.url,
                 dest_path=self.dest_path,
                 progress_callback=_on_progress,
-                num_threads=4,
+                num_threads=8,
                 cancel_event=self._cancel_event,
             )
 
