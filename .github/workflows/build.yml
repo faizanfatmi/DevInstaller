@@ -131,13 +131,38 @@ jobs:
       - name: Determine Tag Name
         id: determine_tag
         run: |
-          MSG="${{ github.event.head_commit.message }}"
-          if [[ "$MSG" =~ ^release:[[:space:]]*([0-9\.]+[A-Za-z0-9\-]*) ]]; then
-            VERSION="${BASH_REMATCH[1]}"
-            echo "TAG_NAME=v$VERSION" >> $GITHUB_ENV
-          elif [[ "${{ github.ref }}" == refs/tags/* ]]; then
-            echo "TAG_NAME=${GITHUB_REF#refs/tags/}" >> $GITHUB_ENV
+          # Single source of truth for the version: meson.build. The build
+          # scripts sync this same value into the binary (scripts/sync_version.py),
+          # so deriving the release tag from meson.build too guarantees the tag
+          # always equals the version baked into the download. Mismatched sources
+          # were what made freshly-downloaded builds nag "update available".
+          MESON_VERSION=$(grep -oE "^[[:space:]]*version:[[:space:]]*'[^']+'" meson.build | head -1 | sed -E "s/.*'([^']+)'.*/\1/")
+          if [ -z "$MESON_VERSION" ]; then
+            echo "::error::Could not read the project version from meson.build"
+            exit 1
           fi
+
+          # Guard: if this release was triggered by a "release: X" commit, that X
+          # must match meson.build — otherwise the tag and the binary would drift.
+          MSG="${{ github.event.head_commit.message }}"
+          if [[ "$MSG" =~ ^release:[[:space:]]*([0-9][0-9A-Za-z.\-]*) ]]; then
+            MSG_VERSION="${BASH_REMATCH[1]}"
+            if [ "$MSG_VERSION" != "$MESON_VERSION" ]; then
+              echo "::error::Release commit declares $MSG_VERSION but meson.build is $MESON_VERSION. Bump meson.build (and run scripts/sync_version.py) so the release tag matches the version compiled into the binary."
+              exit 1
+            fi
+          fi
+
+          # Guard: a manually pushed tag must also match meson.build.
+          if [[ "${{ github.ref }}" == refs/tags/* ]]; then
+            TAG_FROM_REF="${GITHUB_REF#refs/tags/}"
+            if [ "$TAG_FROM_REF" != "v$MESON_VERSION" ]; then
+              echo "::error::Pushed tag $TAG_FROM_REF does not match meson.build v$MESON_VERSION."
+              exit 1
+            fi
+          fi
+
+          echo "TAG_NAME=v$MESON_VERSION" >> $GITHUB_ENV
 
       - name: Generate Changelog
         id: changelog

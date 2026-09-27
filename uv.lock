@@ -22,7 +22,7 @@ wheels = [
 
 [[package]]
 name = "devinstaller"
-version = "1.0.9"
+version = "1.2.0"
 source = { editable = "." }
 dependencies = [
     { name = "pyside6" },

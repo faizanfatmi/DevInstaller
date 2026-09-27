@@ -570,7 +570,7 @@ def _download_sql_developer(url: str, dest_zip: str, progress_cb=None) -> bool:
     """Download SQL Developer archive with parallel multi-threading and progress logging."""
     log("  Downloading Oracle SQL Developer (~500 MB) via parallel chunk downloader…")
     log(f"  Source: {url}")
-    log("  Using 8-thread parallel byte-range streams for maximum download speed.")
+    log("  Using adaptive parallel byte-range streams for maximum download speed.")
 
     if not _download_archive(url, dest_zip, "Oracle SQL Developer", progress_cb, num_threads=8):
         log("  ✗ Parallel download failed.")

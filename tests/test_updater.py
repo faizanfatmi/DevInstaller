@@ -31,3 +31,19 @@ def test_downloaded_latest_stops_prompting():
     released_tag = "v1.2.0"
     app_version = "1.2.0"
     assert is_newer(released_tag, app_version) is False
+
+
+def test_version_component_count_mismatch_is_not_an_update():
+    """A release tag and baked version for the SAME release must never nag,
+    even when they carry a different number of components.
+
+    This is the reported bug: a freshly downloaded/built copy kept showing an
+    update because e.g. tag 'v1.2' compared 'older' than baked '1.2.0' (or the
+    reverse made '1.2.0' look newer than '1.2')."""
+    assert is_newer("1.2.0", "1.2") is False
+    assert is_newer("v1.2", "1.2.0") is False
+    assert is_newer("1.2.0.0", "1.2.0") is False
+    assert is_newer("1.2.0", "1.2.0.0") is False
+    # A genuine bump across differing widths still registers.
+    assert is_newer("1.3", "1.2.0") is True
+    assert is_newer("1.2.1", "1.2") is True

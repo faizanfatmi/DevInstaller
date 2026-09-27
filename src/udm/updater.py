@@ -29,8 +29,20 @@ def parse_version(v_str: str) -> tuple[int, ...]:
 
 
 def is_newer(latest_version: str, current_version: str) -> bool:
-    """Return True if latest_version is newer than current_version."""
-    return parse_version(latest_version) > parse_version(current_version)
+    """Return True if latest_version is strictly newer than current_version.
+
+    Version tuples are zero-padded to equal length before comparing so that
+    differing component counts for the *same* release never look like an update
+    — e.g. a release tag ``v1.2`` and a baked version ``1.2.0`` are equal, and
+    ``1.2.0`` is not "newer" than ``1.2``. Without this, tuple comparison treats
+    the longer tuple as greater and the app nags forever even on the latest build.
+    """
+    latest = parse_version(latest_version)
+    current = parse_version(current_version)
+    width = max(len(latest), len(current))
+    latest += (0,) * (width - len(latest))
+    current += (0,) * (width - len(current))
+    return latest > current
 
 
 class UpdateCheckWorker(QThread):
