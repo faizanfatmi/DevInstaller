@@ -10,7 +10,8 @@
 
 ---
 
-![DevInstaller Screenshot](screenshot.png)
+<img width="1547" height="948" alt="Screenshot" src="https://github.com/user-attachments/assets/dd98b416-33a2-4b7a-b25a-eb3d54714ca0" />
+
 
 DevInstaller is a cross-platform desktop application that lets developers search, select, and install programming languages, compilers, SDKs, and developer tools from a comprehensive catalog — all from a single, premium Qt-based GUI.
 
