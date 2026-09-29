@@ -5,7 +5,7 @@ SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 ROOT="$(dirname "$SCRIPT_DIR")"
 DIST="$ROOT/dist"
 BUILD="$ROOT/build/appimage"
-APPDIR="$BUILD/UniversalDevManager.AppDir"
+APPDIR="$BUILD/DevInstaller.AppDir"
 
 echo "=== Building Linux AppImage ==="
 
@@ -17,7 +17,7 @@ python3 -m PyInstaller \
     --clean \
     --noconfirm \
     --onedir \
-    --name UniversalDevManager \
+    --name DevInstaller \
     --add-data "$ROOT/logo.png:." \
     --add-data "$ROOT/tools.json:." \
     --add-data "$ROOT/src/udm/assets:src/udm/assets" \
@@ -36,26 +36,28 @@ mkdir -p "$APPDIR/usr/share/applications"
 mkdir -p "$APPDIR/usr/share/icons/hicolor/scalable/apps"
 mkdir -p "$APPDIR/usr/share/icons/hicolor/256x256/apps"
 
-cp -r "$BUILD/pyinstaller-dist/UniversalDevManager/"* "$APPDIR/usr/bin/"
+cp -r "$BUILD/pyinstaller-dist/DevInstaller/"* "$APPDIR/usr/bin/"
 
-# Desktop entry
-cat >"$APPDIR/usr/share/applications/UniversalDevManager.desktop" <<'EOF'
+# Desktop entry. The `Name` here MUST match the AppImage's file name
+# (DevInstaller-<arch>.AppImage) — the AppImage catalog rejects a mismatch
+# ("File name 'DevInstaller' does not match the application '<Name>'").
+cat >"$APPDIR/usr/share/applications/DevInstaller.desktop" <<'EOF'
 [Desktop Entry]
 Type=Application
-Name=Universal Dev Manager
+Name=DevInstaller
 Comment=Cross-platform developer tool installer
-Exec=UniversalDevManager
-Icon=UniversalDevManager
+Exec=DevInstaller
+Icon=DevInstaller
 Categories=Development;
 Terminal=false
 EOF
 
-cp "$APPDIR/usr/share/applications/UniversalDevManager.desktop" "$APPDIR/UniversalDevManager.desktop"
+cp "$APPDIR/usr/share/applications/DevInstaller.desktop" "$APPDIR/DevInstaller.desktop"
 
 # Copy official application icons
-cp "$ROOT/logo.svg" "$APPDIR/UniversalDevManager.svg"
-cp "$ROOT/logo.svg" "$APPDIR/usr/share/icons/hicolor/scalable/apps/UniversalDevManager.svg"
-cp "$ROOT/logo.png" "$APPDIR/usr/share/icons/hicolor/256x256/apps/UniversalDevManager.png"
+cp "$ROOT/logo.svg" "$APPDIR/DevInstaller.svg"
+cp "$ROOT/logo.svg" "$APPDIR/usr/share/icons/hicolor/scalable/apps/DevInstaller.svg"
+cp "$ROOT/logo.png" "$APPDIR/usr/share/icons/hicolor/256x256/apps/DevInstaller.png"
 cp "$ROOT/logo.png" "$APPDIR/.DirIcon"
 
 # AppRun
@@ -63,7 +65,7 @@ cat >"$APPDIR/AppRun" <<'APPRUN'
 #!/bin/bash
 SELF=$(readlink -f "$0")
 HERE=${SELF%/*}
-exec "${HERE}/usr/bin/UniversalDevManager" "$@"
+exec "${HERE}/usr/bin/DevInstaller" "$@"
 APPRUN
 chmod +x "$APPDIR/AppRun"
 
@@ -81,6 +83,6 @@ else
     APPIMAGETOOL="appimagetool"
 fi
 
-ARCH="$(uname -m)" "$APPIMAGETOOL" "$APPDIR" "$DIST/UniversalDevManager-${ARCH}.AppImage"
+ARCH="$(uname -m)" "$APPIMAGETOOL" "$APPDIR" "$DIST/DevInstaller-${ARCH}.AppImage"
 
 echo "=== AppImage created at $DIST/ ==="
