@@ -144,3 +144,13 @@ def ensure_dnf_ready():
         log("  Refreshing dnf metadata…")
         run_privileged_command("dnf makecache -y", timeout=180)
         ensure_dnf_ready._done = True
+
+
+def ensure_apk_updated():
+    """Refresh the apk package index once per session on Alpine-family Linux."""
+    if not is_linux():
+        return
+    if not hasattr(ensure_apk_updated, "_done"):
+        log("  Updating apk package index…")
+        run_privileged_command("apk update", timeout=120)
+        ensure_apk_updated._done = True

@@ -53,6 +53,10 @@ _FAMILY_BY_ID = {
     "opensuse-leap": "suse",
     "opensuse-tumbleweed": "suse",
     "sles": "suse",
+    "gentoo": "gentoo",
+    "funtoo": "gentoo",
+    "alpine": "alpine",
+    "postmarketos": "alpine",
 }
 
 
@@ -79,7 +83,7 @@ def detect_linux_distro() -> dict[str, str]:
     """Return distro info: {'id', 'id_like', 'name', 'family'}.
 
     ``family`` is normalised to one of: 'arch', 'fedora', 'debian', 'suse',
-    'unknown'. Non-Linux systems return family 'unknown'.
+    'gentoo', 'alpine', 'unknown'. Non-Linux systems return family 'unknown'.
     """
     if not is_linux():
         return {"id": "", "id_like": "", "name": os_label(), "family": "unknown"}
@@ -114,4 +118,4 @@ def linux_distro_name() -> str:
 
 def is_supported_linux() -> bool:
     """Return True if the current Linux distro family is supported."""
-    return linux_distro_family() in {"arch", "fedora", "debian"}
+    return linux_distro_family() in {"arch", "fedora", "debian", "gentoo", "alpine"}

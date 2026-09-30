@@ -1,8 +1,8 @@
-"""Translate Debian/apt install commands into pacman (Arch) or dnf (Fedora).
+"""Translate Debian/apt install commands into other package managers.
 
 DevInstaller's ``tools.json`` expresses Linux installs with apt commands. To
-support Arch and Fedora without duplicating ~130 entries, we derive the native
-command at runtime: parse the package list out of an
+support Arch, Fedora, Gentoo and Alpine without duplicating ~130 entries, we
+derive the native command at runtime: parse the package list out of an
 ``apt-get install -y <pkgs>`` command and re-emit it for the target package
 manager, translating package names that differ across distributions.
 
@@ -17,46 +17,54 @@ from __future__ import annotations
 
 import re
 
-# Debian package name -> (arch package(s), fedora package(s)).
-# A value of None means "no direct equivalent"; the original name is kept.
-# Multiple packages are space-separated.
-_PKG_MAP: dict[str, tuple[str | None, str | None]] = {
+# Debian package name -> {family: native package name(s)}.
+# A missing family key means "no known equivalent" — the original name is kept
+# and left for the target package manager to resolve. Multiple packages are
+# space-separated.
+_PKG_MAP: dict[str, dict[str, str]] = {
     # Python
-    "python3": ("python", "python3"),
-    "python3-pip": ("python-pip", "python3-pip"),
-    "python3-venv": ("python", "python3"),
-    "python3.11": ("python", "python3.11"),
-    "python3.11-venv": ("python", "python3.11"),
+    "python3": {"arch": "python", "fedora": "python3", "alpine": "python3", "gentoo": "dev-lang/python"},
+    "python3-pip": {"arch": "python-pip", "fedora": "python3-pip", "alpine": "py3-pip", "gentoo": "dev-python/pip"},
+    "python3-venv": {"arch": "python", "fedora": "python3", "alpine": "python3", "gentoo": "dev-lang/python"},
+    "python3.11": {"arch": "python", "fedora": "python3.11", "alpine": "python3", "gentoo": "dev-lang/python"},
+    "python3.11-venv": {"arch": "python", "fedora": "python3.11", "alpine": "python3", "gentoo": "dev-lang/python"},
     # C / C++ / build
-    "g++": ("gcc", "gcc-c++"),
-    "build-essential": ("base-devel", "@development-tools"),
-    "gfortran": ("gcc-fortran", "gcc-gfortran"),
-    "ninja-build": ("ninja", "ninja-build"),
+    "g++": {"arch": "gcc", "fedora": "gcc-c++", "alpine": "g++", "gentoo": "sys-devel/gcc"},
+    "build-essential": {"arch": "base-devel", "fedora": "@development-tools", "alpine": "build-base", "gentoo": "sys-devel/gcc"},
+    "gfortran": {"arch": "gcc-fortran", "fedora": "gcc-gfortran", "alpine": "gfortran"},
+    "ninja-build": {"arch": "ninja", "fedora": "ninja-build", "gentoo": "dev-util/ninja"},
     # Java
-    "openjdk-21-jdk": ("jdk-openjdk", "java-21-openjdk-devel"),
-    "openjdk-17-jdk": ("jdk17-openjdk", "java-17-openjdk-devel"),
+    "openjdk-21-jdk": {"arch": "jdk-openjdk", "fedora": "java-21-openjdk-devel", "alpine": "openjdk21"},
+    "openjdk-17-jdk": {"arch": "jdk17-openjdk", "fedora": "java-17-openjdk-devel", "alpine": "openjdk17"},
     # .NET
-    "dotnet-sdk-8.0": ("dotnet-sdk", "dotnet-sdk-8.0"),
+    "dotnet-sdk-8.0": {"arch": "dotnet-sdk", "fedora": "dotnet-sdk-8.0", "alpine": "dotnet8-sdk"},
     # PHP
-    "php-cli": ("php", "php-cli"),
-    "php-mbstring": ("php", "php-mbstring"),
+    "php-cli": {"arch": "php", "fedora": "php-cli", "alpine": "php", "gentoo": "dev-lang/php"},
+    "php-mbstring": {"arch": "php", "fedora": "php-mbstring", "alpine": "php-mbstring"},
     # Ruby
-    "ruby-full": ("ruby", "ruby"),
+    "ruby-full": {"arch": "ruby", "fedora": "ruby", "alpine": "ruby", "gentoo": "dev-lang/ruby"},
     # Node
-    "nodejs": ("nodejs", "nodejs"),
+    "nodejs": {"arch": "nodejs", "fedora": "nodejs", "alpine": "nodejs", "gentoo": "net-libs/nodejs"},
     # Go
-    "golang-go": ("go", "golang"),
+    "golang-go": {"arch": "go", "fedora": "golang", "alpine": "go", "gentoo": "dev-lang/go"},
     # Databases / services commonly named differently
-    "postgresql": ("postgresql", "postgresql-server"),
-    "default-mysql-server": ("mariadb", "mariadb-server"),
-    "mysql-server": ("mariadb", "mariadb-server"),
+    "postgresql": {"arch": "postgresql", "fedora": "postgresql-server", "alpine": "postgresql", "gentoo": "dev-db/postgresql"},
+    "default-mysql-server": {"arch": "mariadb", "fedora": "mariadb-server", "alpine": "mariadb", "gentoo": "dev-db/mariadb"},
+    "mysql-server": {"arch": "mariadb", "fedora": "mariadb-server", "alpine": "mariadb", "gentoo": "dev-db/mariadb"},
 }
 
-# apt package names that have no sensible Arch/Fedora equivalent and should be
+# apt package names that have no sensible equivalent for a family and should be
 # dropped from the translated command (already provided by another package).
 _DROP_ON = {
     "arch": {"python3-venv", "python3.11-venv", "php-cli"},
-    "fedora": set(),
+}
+
+# Family -> command template for a translated install. ``{}`` is the package list.
+_INSTALL_TEMPLATE = {
+    "arch": "pacman -S --needed --noconfirm {}",
+    "fedora": "dnf install -y {}",
+    "gentoo": "emerge --noreplace {}",
+    "alpine": "apk add {}",
 }
 
 _APT_INSTALL_RE = re.compile(
@@ -81,14 +89,12 @@ def _extract_apt_packages(cmd: str) -> list[str] | None:
 
 def _map_packages(pkgs: list[str], family: str) -> list[str]:
     """Translate apt package names to *family* names, preserving order."""
-    idx = 0 if family == "arch" else 1
     out: list[str] = []
     seen: set[str] = set()
     for pkg in pkgs:
         if pkg in _DROP_ON.get(family, set()):
             continue
-        mapped = _PKG_MAP.get(pkg)
-        names = mapped[idx] if mapped and mapped[idx] else pkg
+        names = _PKG_MAP.get(pkg, {}).get(family) or pkg
         for name in names.split():
             if name not in seen:
                 seen.add(name)
@@ -104,15 +110,15 @@ def translate_apt_command(cmd: str, family: str) -> str | None:
     cmd:
         The tool's ``install_command_linux`` (typically an apt command).
     family:
-        Target distro family: 'arch' or 'fedora'.
+        Target distro family: 'arch', 'fedora', 'gentoo' or 'alpine'.
 
     Returns
     -------
     str | None
-        A pacman/dnf command string, or None if *cmd* is empty or not an apt
-        command (in which case the caller should use it unchanged).
+        A native package-manager command string, or None if *cmd* is empty or
+        not an apt command (in which case the caller should use it unchanged).
     """
-    if family not in ("arch", "fedora"):
+    if family not in _INSTALL_TEMPLATE:
         return None
     if not cmd or not cmd.strip():
         return None
@@ -126,7 +132,4 @@ def translate_apt_command(cmd: str, family: str) -> str | None:
     if not mapped:
         return None
 
-    joined = " ".join(mapped)
-    if family == "arch":
-        return f"pacman -S --needed --noconfirm {joined}"
-    return f"dnf install -y {joined}"
+    return _INSTALL_TEMPLATE[family].format(" ".join(mapped))

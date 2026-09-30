@@ -1,13 +1,14 @@
 """Core installation engine — detect, install, and configure PATH.
 
 On Linux the correct install command is chosen per distribution family
-(Arch / Fedora / Debian). Tools may provide distro-specific commands via
-``install_command_arch`` / ``install_command_fedora`` / ``install_command_debian``;
-when absent, the engine falls back to the generic ``install_command_linux`` so
-existing tools.json entries continue to work unchanged.
+(Arch / Fedora / Debian / Gentoo / Alpine). Tools may provide distro-specific
+commands via ``install_command_arch`` / ``_fedora`` / ``_debian`` / ``_gentoo``
+/ ``_alpine``; when absent, the engine derives one from the generic
+``install_command_linux`` so existing tools.json entries keep working.
 
-Privileged package-manager operations are executed through pkexec so the native
-polkit password dialog is displayed.
+Privileged package-manager operations are executed through pkexec (or another
+GUI elevation tool) so the user is prompted for a password with a native
+dialog.
 """
 
 import platform
@@ -17,6 +18,7 @@ from udm.installer.callbacks import log
 from udm.installer.distro_packages import translate_apt_command
 from udm.installer.progress import parse_progress
 from udm.installer.prerequisites import (
+    ensure_apk_updated,
     ensure_apt_updated,
     ensure_dnf_ready,
     ensure_homebrew,
@@ -42,8 +44,24 @@ from udm.platform import (
     run_privileged_command,
 )
 
-# Package managers whose invocations require root (routed via pkexec on Linux).
-_PRIVILEGED_MANAGERS = ("apt", "apt-get", "pacman", "dnf", "yum", "zypper")
+# Package managers whose invocations require root (routed through a GUI
+# elevation tool on Linux — see run_privileged_command).
+_PRIVILEGED_MANAGERS = (
+    "apt", "apt-get", "pacman", "dnf", "yum", "zypper", "emerge", "apk",
+)
+
+# Head of a resolved Linux install command -> the matching uninstall command
+# (package name appended by the caller). Keyed by package manager.
+_LINUX_UNINSTALL_VERB = {
+    "apt": "apt-get purge -y",
+    "apt-get": "apt-get purge -y",
+    "pacman": "pacman -Rns --noconfirm",
+    "dnf": "dnf remove -y",
+    "yum": "yum remove -y",
+    "zypper": "zypper remove -y",
+    "emerge": "emerge --unmerge --quiet",
+    "apk": "apk del",
+}
 
 
 def _linux_install_cmd(tool: dict) -> str:
@@ -57,6 +75,8 @@ def _linux_install_cmd(tool: dict) -> str:
         "fedora": "install_command_fedora",
         "debian": "install_command_debian",
         "suse": "install_command_suse",
+        "gentoo": "install_command_gentoo",
+        "alpine": "install_command_alpine",
     }.get(family)
 
     # 1) An explicit per-distro command in tools.json always wins.
@@ -65,13 +85,12 @@ def _linux_install_cmd(tool: dict) -> str:
 
     linux_cmd = tool.get("install_command_linux", "")
 
-    # 2) For Arch/Fedora, derive a native command from the apt command when
-    #    possible (non-apt commands like npm/pip/curl are cross-distro and are
-    #    returned unchanged by the translator).
-    if family in ("arch", "fedora"):
-        derived = translate_apt_command(linux_cmd, family)
-        if derived:
-            return derived
+    # 2) Derive a native command from the apt command when possible (non-apt
+    #    commands like npm/pip/curl are cross-distro and returned unchanged by
+    #    the translator).
+    derived = translate_apt_command(linux_cmd, family)
+    if derived:
+        return derived
 
     # 3) Fall back to the generic linux command.
     return linux_cmd
@@ -339,21 +358,16 @@ def uninstall_tool(tool: dict) -> bool:
                     cmd_success = True
 
     elif is_linux():
-        cmd = tool.get("install_command_linux", "")
-        if "apt" in cmd or "apt-get" in cmd:
-            parts = cmd.split()
-            pkg = parts[-1]
-            rc, out, err = run_command(f"sudo apt-get purge -y {pkg}", timeout=300)
-            cmd_success = (rc == 0)
-        elif "pacman" in cmd:
-            parts = cmd.split()
-            pkg = parts[-1]
-            rc, out, err = run_command(f"sudo pacman -Rns --noconfirm {pkg}", timeout=300)
-            cmd_success = (rc == 0)
-        elif "dnf" in cmd:
-            parts = cmd.split()
-            pkg = parts[-1]
-            rc, out, err = run_command(f"sudo dnf remove -y {pkg}", timeout=300)
+        # Resolve the family-correct command so we uninstall with the same
+        # package manager we would have installed with (pacman/dnf/emerge/apk/
+        # apt), and elevate the removal through the GUI password prompt.
+        cmd = _get_install_cmd(tool)
+        toks = _strip_sudo(cmd).split()
+        head = toks[0] if toks else ""
+        verb = _LINUX_UNINSTALL_VERB.get(head)
+        if verb and toks:
+            pkg = toks[-1]  # single-package installs; matches install behaviour
+            rc, out, err = run_privileged_command(f"{verb} {pkg}", timeout=300)
             cmd_success = (rc == 0)
         elif "pip install" in cmd:
             parts = cmd.split("pip install")
@@ -433,11 +447,12 @@ def can_uninstall(tool: dict) -> bool:
             "dotnet tool install",
         ))
     elif is_linux():
-        cmd = tool.get("install_command_linux", "")
+        cmd = _get_install_cmd(tool)
+        toks = _strip_sudo(cmd).split()
+        head = toks[0] if toks else ""
+        if head in _LINUX_UNINSTALL_VERB:
+            return True
         return any(mgr in cmd for mgr in (
-            "apt",
-            "pacman",
-            "dnf",
             "pip install",
             "npm install -g",
             "cargo install",
@@ -463,6 +478,11 @@ def _run_linux_prerequisites(cmd: str) -> None:
         ensure_pacman_synced()
     elif head in ("dnf", "yum"):
         ensure_dnf_ready()
+    elif head == "apk":
+        ensure_apk_updated()
+    # ponytail: no emerge --sync — a Gentoo box always has a synced Portage
+    # tree, and syncing here would add a multi-minute network hit to every
+    # install. Add an ensure_portage_synced() if stale trees become a problem.
 
 
 def _augment_winget(cmd: str) -> str:
@@ -530,7 +550,7 @@ def install_tool(tool: dict, progress_cb: Optional[Callable[[int], None]] = None
     if is_linux() and not is_supported_linux():
         log(
             f"  ✗ {linux_distro_name()} is not a supported Linux distribution. "
-            "Supported families: Arch, Fedora, Debian/Ubuntu."
+            "Supported families: Arch, Fedora, Debian/Ubuntu, Gentoo, Alpine."
         )
         return False
 

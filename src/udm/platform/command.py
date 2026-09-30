@@ -1,6 +1,7 @@
 """Shell command execution utilities."""
 
 import os
+import shutil
 import subprocess
 import threading
 from typing import Callable, Optional
@@ -138,16 +139,17 @@ def run_privileged_command(
     shell: bool = True,
     timeout: int = 900,
 ) -> tuple[int, str, str]:
-    """Run *cmd* with elevated privileges on Linux using pkexec.
+    """Run *cmd* with elevated privileges on Linux, prompting for a password.
 
     Behaviour:
     - If already running as root, the command runs unchanged.
-    - On Linux with pkexec available, the command is wrapped so the native
-      polkit password dialog is shown. Because pkexec does not accept a shell
-      string directly, the command is executed via ``sh -c``.
-    - If pkexec is unavailable, falls back to running the command as-is (which
-      may itself prompt via sudo, or fail with a permissions error that the
-      caller surfaces to the user).
+    - Otherwise the first available GUI-capable elevation tool is used so the
+      user gets a native password dialog (see ``_elevation``): pkexec (polkit),
+      the lxqt/kde graphical su wrappers, or sudo with a graphical askpass
+      helper. Each runs the command via ``sh -c`` so pipes/&& are interpreted.
+    - If none is available, falls back to running the command as-is (which may
+      itself prompt via sudo, or fail with a permissions error the caller
+      surfaces to the user).
 
     Returns the same (returncode, stdout, stderr) tuple as run_command.
     """
@@ -163,30 +165,81 @@ def run_privileged_command(
     if already_root:
         return run_command(cmd, shell=shell, timeout=timeout)
 
-    if command_exists("pkexec"):
-        # pkexec runs a single program; use a login-ish shell to interpret the
-        # full command string (pipes, &&, etc.).
-        try:
-            proc = subprocess.run(
-                ["pkexec", "sh", "-c", cmd],
-                stdout=subprocess.PIPE,
-                stderr=subprocess.PIPE,
-                timeout=timeout,
-            )
-            return (
-                proc.returncode,
-                proc.stdout.decode(errors="replace"),
-                proc.stderr.decode(errors="replace"),
-            )
-        except subprocess.TimeoutExpired:
-            logger.error(f"Privileged command timed out: {cmd}")
-            return -1, "", "Command timed out"
-        except Exception as e:
-            logger.error(f"Privileged command failed: {cmd} — {e}")
-            return -1, "", str(e)
+    elevation = _elevation(cmd)
+    if elevation is None:
+        logger.warning(
+            "No GUI elevation tool (pkexec/lxqt-sudo/kdesu/sudo askpass) found; "
+            "running command without elevation."
+        )
+        return run_command(cmd, shell=shell, timeout=timeout)
 
-    logger.warning("pkexec not found; running command without GUI elevation.")
-    return run_command(cmd, shell=shell, timeout=timeout)
+    argv, extra_env = elevation
+    env = {**os.environ, **extra_env} if extra_env else None
+    try:
+        proc = subprocess.run(
+            argv,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            timeout=timeout,
+            env=env,
+        )
+        return (
+            proc.returncode,
+            proc.stdout.decode(errors="replace"),
+            proc.stderr.decode(errors="replace"),
+        )
+    except subprocess.TimeoutExpired:
+        logger.error(f"Privileged command timed out: {cmd}")
+        return -1, "", "Command timed out"
+    except Exception as e:
+        logger.error(f"Privileged command failed: {cmd} — {e}")
+        return -1, "", str(e)
+
+
+# Graphical askpass helpers used with ``sudo -A`` when no polkit/graphical-su
+# tool is present. Checked on PATH first, then a couple of common absolute paths.
+_ASKPASS_HELPERS = (
+    "ssh-askpass",
+    "lxqt-openssh-askpass",
+    "ksshaskpass",
+    "x11-ssh-askpass",
+    "ssh-askpass-fullscreen",
+)
+_ASKPASS_PATHS = (
+    "/usr/lib/ssh/ssh-askpass",
+    "/usr/libexec/openssh/ssh-askpass",
+)
+
+
+def _find_askpass() -> str | None:
+    """Return the path to a graphical askpass helper, or None."""
+    for name in _ASKPASS_HELPERS:
+        path = shutil.which(name)
+        if path:
+            return path
+    for path in _ASKPASS_PATHS:
+        if os.path.exists(path):
+            return path
+    return None
+
+
+def _elevation(cmd: str) -> tuple[list[str], dict[str, str]] | None:
+    """Pick a GUI-capable elevation strategy for *cmd*.
+
+    Returns ``(argv, extra_env)`` to run ``cmd`` elevated with a password
+    prompt, or None if no suitable tool is installed. Order of preference:
+    pkexec (polkit) → lxqt-sudo → kdesu → sudo with a graphical askpass.
+    """
+    if command_exists("pkexec"):
+        return ["pkexec", "sh", "-c", cmd], {}
+    if command_exists("lxqt-sudo"):
+        return ["lxqt-sudo", "sh", "-c", cmd], {}
+    if command_exists("kdesu"):
+        return ["kdesu", "-c", cmd], {}
+    askpass = _find_askpass()
+    if askpass and command_exists("sudo"):
+        return ["sudo", "-A", "sh", "-c", cmd], {"SUDO_ASKPASS": askpass}
+    return None
 
 
 def command_exists(cmd: str) -> bool:
